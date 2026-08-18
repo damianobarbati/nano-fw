@@ -3,12 +3,11 @@
 This example folder showcases how to use the **fwxs** utilities in your project.
 
 Steps are:
-1. Create the `./database` folder: define the db and the initial schema.
-2. Create the `./src` folder.
-3. Create the zod schemas.
-4. Create the repository.
-5. Create the routes.
-6. Run the database, run the migrations, start the server.
+1. Create the `./database` folder: add the database configuration and the initial schem/migration.
+2. Create the `./src` folder: add the schemas, the repositories and the service.
+3. Create the routes.
+4. Create the `index.ts` file.
+5. Run the database, run the migrations, start the server.
 
 You should end up in a structure like this:
 ```text
