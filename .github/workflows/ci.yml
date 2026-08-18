@@ -43,8 +43,8 @@ jobs:
 
       - name: Start testing environment
         run: |
-          docker run -d --name nanofw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nanofw postgres:18-alpine
-          timeout 10 bash -c -- "while ! docker run --rm --network=host -i postgres:18-alpine pg_isready --quiet --timeout=1 -d postgres://user:password@localhost:5432/nanofw; do sleep 1; done"
+          docker run -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
+          timeout 10 bash -c -- "while ! docker run --rm --network=host -i postgres:18-alpine pg_isready --quiet --timeout=1 -d postgres://user:password@localhost:5432/nano-fw; do sleep 1; done"
 
       - name: Test
         run: pnpm test

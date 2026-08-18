@@ -1,6 +1,6 @@
 # Intro
 
-Welcome to the example API documentation built with **nanofw**.
+Welcome to the example API documentation built with **nano-fw**.
 
 This application demonstrates:
 - HTTP routing and request handling with **Hono**.

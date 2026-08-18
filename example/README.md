@@ -1,6 +1,6 @@
-# nanofw example
+# nano-fw example
 
-This example folder showcases how to use the **nanofw** utilities in your project.
+This example folder showcases how to use the **nano-fw** utilities in your project.
 
 Steps are:
 1. Create the `./database` folder: add the database configuration and the initial db schema and db migration.
@@ -32,7 +32,7 @@ example/
 
 Start db:
 ```sh
-docker run --name nanofw-pg --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nanofw -d postgres:18-alpine
+docker run --name nano-fw-pg --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw -d postgres:18-alpine
 ```
 
 Run migrations:

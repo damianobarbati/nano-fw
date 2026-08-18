@@ -1,6 +1,6 @@
-# nanofw
+# nano-fw
 
-`nanofw` (xs-sized framework) is a minimal, schema-driven TypeScript micro-framework powered by Hono, Zod, Knex, and OpenAPI.  
+`nano-fw` (nano-sized framework) is a minimal, schema-driven TypeScript micro-framework powered by Hono, Zod, Knex, and OpenAPI.  
 It's small, pragmatic, ESM-first and TypeScript-first.  
 It provides type-safe request and response validation, automatic OpenAPI generation with Scalar docs, and transparent transactional repositories via AsyncLocalStorage.
 
@@ -29,7 +29,7 @@ pnpm tsc # typecheck
 
 Testing:
 ```sh
-docker run -d --name nanofw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nanofw postgres:18-alpine
+docker run -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
 pnpm test
 ```
 
@@ -37,7 +37,7 @@ pnpm test
 
 Install:
 ```sh
-pnpm i nanofw
+pnpm i nano-fw
 ```
 
 Add the suggested scripts to your `package.json`:
