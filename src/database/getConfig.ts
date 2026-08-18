@@ -14,6 +14,7 @@ const getConfig = (connectionString: string, maxConnections = 20): Knex.Config =
 
   const config: Knex.Config = {
     client: 'pg',
+    // aws uses unverified ssl, change the export config as needed
     connection: { connectionString, ssl: isLocal ? undefined : { rejectUnauthorized: false } },
     pool: {
       min: 0, // destroy all idle connections (ref: https://github.com/knex/knex/issues/4525#issuecomment-862394537)

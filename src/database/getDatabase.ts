@@ -39,6 +39,8 @@ const getDatabase = (config: Knex.Config) => {
     if (duration > SLOW_QUERY_THRESHOLD) console.log(`[SLOW QUERY ${duration}ms] ${interpolateQuery(query.sql, query.bindings).slice(0, 1_000)}`);
   });
 
+  database.on('query-error', (_error, query) => queries_times.delete(query.__knexQueryUid));
+
   return database;
 };
 

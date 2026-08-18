@@ -15,7 +15,7 @@ export type RouteMeta = Partial<{
   responses: Record<number | string, { description: string; schema: ZodType }>;
 }>;
 
-export const HTTPMethods = ['get', 'post', 'put', 'delete'] as const;
+export const HTTPMethods = ['get', 'post', 'put', 'patch', 'delete'] as const;
 export type HTTPMethod = (typeof HTTPMethods)[number];
 
 export const documentEndpoint = (openapiRegistry: OpenAPIRegistry, method: HTTPMethod, path: string, requestSchema: ZodType, responseSchema: ZodType, meta?: RouteMeta) => {
