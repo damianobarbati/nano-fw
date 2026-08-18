@@ -1,0 +1,8 @@
+**/dist/
+**/node_modules/
+.idea/
+**/docs/openapi.yml
+coverage/
+stats.html
+.DS_Store
+watch*

@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <title>XYZ API reference</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <script id="api-reference" data-url="/openapi.yml" data-proxy-url="https://proxy.scalar.com"></script>
+    <script>
+    // ref: https://scalar.com/products/api-references/configuration#configuration-options
+    const scalarConfig = {
+      defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
+      baseServerURL: window.location.href,
+      favicon: '/logo.png',
+      siteConfig: {
+        name: 'XYZ API reference',
+      },
+      theme: 'default',
+      forceDarkModeState: 'light',
+      defaultOpenAllTags: true,
+      tagsSorter: 'alpha',
+      documentDownloadType: 'none',
+      hideClientButton: true,
+      hideTestRequestButton: true,
+      hideDarkModeToggle: true,
+      showToolbar: 'never',
+      // https://github.com/scalar/scalar/blob/main/documentation/themes.md#advanced-styling
+      withDefaultFonts: true,
+      // https://github.com/scalar/scalar/blob/main/documentation/configuration.md#customcss-string
+      customCss: `section.introduction-section .section-column:nth-child(2) { display: none !important; }`,
+    };
+    document.getElementById('api-reference').dataset.configuration = JSON.stringify(scalarConfig);
+
+    // add logo
+    const onSidebarReady = (sidebar) => {
+      const img = document.createElement('img');
+      img.src = '/logo.png';
+      img.alt = 'XYZ logo';
+      img.style.padding = '20px';
+      sidebar.prepend(img);
+    };
+
+    const observer = new MutationObserver((_mutations, observer) => {
+      const sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      onSidebarReady(sidebar);
+      observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/scalar-api-reference/1.43.12/standalone.min.js" integrity="sha512-JXi8BgS0xzX9xfY/HdswOFaNO4scdBnJZRqYH8wn7ABwEzVbbgphWWs7uy0poZI9MMNGJLwXbNS8c6RulMjfdg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  </body>
+</html>
