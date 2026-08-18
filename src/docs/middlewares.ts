@@ -1,8 +1,10 @@
 import { getOpenApiMetadata, getRefId, type OpenAPIRegistry, type RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { Context } from 'hono';
-import { ZodNullable, ZodObject, type ZodType, z } from 'zod';
+import type { Context, ErrorHandler } from 'hono';
+import { ZodError, ZodNullable, ZodObject, type ZodType, z } from 'zod';
+import { AppError, AppErrorSchema, ValidationErrorSchema } from '#framework/AppError.ts';
 
 export { openapiRegistry } from './openapi.ts';
+export { AppError, AppErrorSchema, ValidationErrorSchema };
 
 const toOpenApiPath = (expressPath: string): string => expressPath.replace(/:([^/]+)/g, '{$1}');
 
@@ -47,11 +49,12 @@ const getOpenApiMetadataByParamIn = (schema: ZodType, paramIn: 'query' | 'body' 
   return { query, path, header, cookie, body };
 };
 
-type RouteMeta = Partial<{
+export type RouteMeta = Partial<{
   section: string;
   description: string;
   responseDescription: string;
   visibility: 'public' | 'private';
+  responses: Record<number | string, { description: string; schema: ZodType }>;
 }>;
 
 export const HTTPMethods = ['get', 'post', 'put', 'delete'] as const;
@@ -68,8 +71,32 @@ export const documentEndpoint = (openapiRegistry: OpenAPIRegistry, method: HTTPM
   if (metadata.body) request.body = { content: { 'application/json': { schema: metadata.body } } };
 
   const tags: string[] = [];
-  if (meta?.description) tags.push(meta.description);
+  if (meta?.section) tags.push(meta.section);
   if (meta?.visibility) tags.push(meta.visibility);
+
+  const responses: RouteConfig['responses'] = {
+    200: {
+      description: meta?.responseDescription || 'Successful response',
+      content: { 'application/json': { schema: responseSchema } },
+    },
+    400: {
+      description: 'Request validation failed',
+      content: { 'application/json': { schema: ValidationErrorSchema } },
+    },
+    500: {
+      description: 'Internal Server Error',
+      content: { 'application/json': { schema: AppErrorSchema } },
+    },
+  };
+
+  if (meta?.responses) {
+    for (const [status, config] of Object.entries(meta.responses)) {
+      responses[Number(status) || status] = {
+        description: config.description,
+        content: { 'application/json': { schema: config.schema } },
+      };
+    }
+  }
 
   const routeConfig: RouteConfig = {
     method,
@@ -78,12 +105,7 @@ export const documentEndpoint = (openapiRegistry: OpenAPIRegistry, method: HTTPM
     summary: path,
     description: meta?.description ?? '',
     request,
-    responses: {
-      200: {
-        description: meta?.responseDescription || '',
-        content: { 'application/json': { schema: responseSchema } },
-      },
-    },
+    responses,
   };
 
   openapiRegistry.registerPath(routeConfig);
@@ -124,4 +146,50 @@ export const runSchemedFn = <TRequest, TResponse>(
     if (!output.success) throw Object.assign(output.error, { source: 'response' satisfies ZodErrorSource });
     return c.json(output.data);
   };
+};
+
+export const errorHandler: ErrorHandler = (err, c) => {
+  if (AppError.isAppError(err)) {
+    const body: Record<string, unknown> = {
+      code: err.code,
+      message: err.message || err.code,
+    };
+    if (err.payload !== undefined) {
+      body.payload = err.payload;
+    }
+    return c.json(body, err.status as any);
+  }
+
+  if (err instanceof ZodError || ('issues' in err && 'source' in (err as any))) {
+    const source = (err as any).source ?? 'request';
+    if (source === 'request') {
+      const appError = new AppError(400, 'VALIDATION_ERROR', 'Validation error on request', err as ZodError);
+      return c.json(
+        {
+          code: appError.code,
+          message: appError.message,
+          payload: appError.payload,
+        },
+        400,
+      );
+    }
+
+    console.error('API Response Schema Violation:', err);
+    return c.json(
+      {
+        code: 'RESPONSE_VALIDATION_ERROR',
+        message: 'Internal server error (response format mismatch)',
+      },
+      500,
+    );
+  }
+
+  console.error('Unhandled error:', err);
+  return c.json(
+    {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: (err as Error)?.message || 'Internal Server Error',
+    },
+    500,
+  );
 };

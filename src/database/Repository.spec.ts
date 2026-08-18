@@ -1,14 +1,11 @@
 import { faker } from '@faker-js/faker';
-import Repository from '#framework/database/Repository.ts';
 import type { Knex } from 'knex';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import getConfig from '#framework/database/getConfig.ts';
 import getDatabase from '#framework/database/getDatabase.ts';
+import Repository from '#framework/database/Repository.ts';
 
-const DB_URI = process.env.DB_URI;
-if (!DB_URI) throw new Error('DB_URI environment variable is not set');
-
-const database = getDatabase(getConfig(DB_URI));
+const database = getDatabase(getConfig('postgres://user:password@localhost:5432/fwxs'));
 
 describe('Repository', () => {
   beforeAll(async () => {

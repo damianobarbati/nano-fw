@@ -3,7 +3,6 @@
     "module": "nodenext",
     "target": "esnext",
     "lib": ["dom", "esnext"],
-    "types": ["wicg-file-system-access"],
     "allowJs": true,
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,

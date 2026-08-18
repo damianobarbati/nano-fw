@@ -18,7 +18,9 @@
     "tsc": "tsc",
     "test": "vitest run",
     "env:up": "docker compose up -d --wait --quiet-pull --remove-orphans",
-    "env:down": "docker compose down --volumes --remove-orphans"
+    "env:down": "docker compose down --volumes --remove-orphans",
+    "example": "node --watch ./example/src/index.ts",
+    "example:migrate": "node ./example/src/migrate.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",

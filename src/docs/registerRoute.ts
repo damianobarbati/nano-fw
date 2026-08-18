@@ -8,7 +8,7 @@ import getPackage from '#framework/getPackage.ts';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const { pkg_name } = getPackage();
 
-export const registerDocsRoute = (app: Hono, routePath: string, folderPath: string) => {
+export const registerRoute = (app: Hono, routePath: string, folderPath: string) => {
   // serve docs.html
   app.get(routePath, async (c) => {
     let html = await fsp.readFile(path.join(__dirname, 'docs.html'), 'utf-8');
