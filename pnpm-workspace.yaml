@@ -1,2 +1,2 @@
-minimumReleaseAge: 1 # tofix
+minimumReleaseAge: 500
 dangerouslyAllowAllBuilds: true
