@@ -23,7 +23,12 @@ type getemQueryResult<ResourceRow extends { id: ID }> =
   | { type: 'query'; query: Knex.QueryBuilder<ResourceRow, ResourceRow[]> }
   | { type: 'raw'; sql: string; bindings: Record<string, any> | any[] };
 
-export default class Repository<Resource, ResourceRow extends { id: ID }, ResourceRowInsert, ResourceRowUpdate> {
+export default class Repository<
+  ResourceRow extends { id: ID } = { id: ID } & Record<string, any>,
+  Resource = ResourceRow,
+  ResourceRowInsert = Omit<Partial<ResourceRow>, 'id' | 'created_at' | 'updated_at'>,
+  ResourceRowUpdate = Partial<ResourceRowInsert>,
+> {
   public configuration: RepositoryConfiguration;
 
   constructor(configuration: RepositoryConfiguration) {
@@ -88,21 +93,29 @@ export default class Repository<Resource, ResourceRow extends { id: ID }, Resour
     return Boolean(row);
   }
 
-  async create(input: ResourceRowInsert | ResourceRowInsert[], plain?: false): Promise<Resource>;
-  async create(input: ResourceRowInsert | ResourceRowInsert[], plain?: true): Promise<ResourceRow>;
-  async create(input: ResourceRowInsert | ResourceRowInsert[], plain = false): Promise<Resource | ResourceRow> {
-    let row: ResourceRow;
+  async create(input: ResourceRowInsert, plain?: false): Promise<Resource>;
+  async create(input: ResourceRowInsert, plain?: true): Promise<ResourceRow>;
+  async create(input: ResourceRowInsert[], plain?: false): Promise<Resource[]>;
+  async create(input: ResourceRowInsert[], plain?: true): Promise<ResourceRow[]>;
+  async create(input: ResourceRowInsert | ResourceRowInsert[], plain?: boolean): Promise<Resource | ResourceRow | Resource[] | ResourceRow[]>;
+  async create(input: ResourceRowInsert | ResourceRowInsert[], plain = false): Promise<Resource | ResourceRow | Resource[] | ResourceRow[]> {
+    const isArray = Array.isArray(input);
+    if (isArray && input.length === 0) return [];
+
+    let rows: ResourceRow[];
 
     if (!this.configuration.viewName) {
-      const [rrow] = await this.db(this.configuration.tableName).insert(input).returning('*');
-      row = rrow as ResourceRow;
+      rows = (await this.db(this.configuration.tableName).insert(input).returning('*')) as ResourceRow[];
     } else {
-      const [rrow] = await this.db(this.configuration.tableName).insert(input).returning(['id']);
-      row = await this.db(this.configuration.viewName).select().where({ id: rrow.id }).first();
-      if (!row) throw new AppError(422, 'RESOURCE_NOT_FOUND_IN_VIEW'); // the view is probably dependent on a row that will be created after this one
+      const insertedRows = (await this.db(this.configuration.tableName).insert(input).returning(['id'])) as { id: ID }[];
+      const ids = insertedRows.map((r) => (typeof r.id === 'object' ? r.id.id : r.id));
+      const viewRows = (await this.db(this.configuration.viewName).select().whereIn('id', ids)) as ResourceRow[];
+      const rowMap = new Map(viewRows.map((row) => [typeof row.id === 'object' ? row.id.id : row.id, row]));
+      rows = ids.map((id) => rowMap.get(id)).filter(Boolean) as ResourceRow[];
+      if (rows.length !== insertedRows.length) throw new AppError(422, 'RESOURCE_NOT_FOUND_IN_VIEW'); // the view is probably dependent on a row that will be created after this one
     }
-    const [result] = await this.applyHydration([row], plain);
-    return result;
+    const results = await this.applyHydration(rows, plain);
+    return isArray ? results : results[0];
   }
 
   async createRaw(input: ResourceRowInsert): Promise<ResourceRow>;

@@ -20,9 +20,6 @@ npm install -g corepack
 corepack enable
 corepack install
 pnpm install
-export $(grep -v '^#' .env | xargs)
-pnpm env:down
-pnpm env:up
 ```
 
 Linting:

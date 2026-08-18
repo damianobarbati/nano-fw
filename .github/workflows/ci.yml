@@ -43,7 +43,6 @@ jobs:
 
       - name: Start testing environment
         run: |
-          export $(grep -v '^#' .env | xargs)
           docker run -d --name fwxs -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=fwxs postgres:18-alpine
           timeout 10 bash -c -- "while ! docker run --rm --network=host -i postgres:18-alpine pg_isready --quiet --timeout=1 -d postgres://user:password@localhost:5432/fwxs; do sleep 1; done"
 
@@ -65,7 +64,7 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: 'package.json'
           cache: 'pnpm'
           registry-url: https://registry.npmjs.org/
 
