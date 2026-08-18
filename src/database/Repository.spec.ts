@@ -20,15 +20,73 @@ describe('Repository', () => {
     await database.raw(`drop view if exists _users2 cascade`);
   });
 
+  describe('create', () => {
+    beforeEach(async () => {
+      await database.raw(`truncate table _users cascade`);
+    });
+
+    it('returns a single object when creating a single entity without view', async () => {
+      type User = { id: string; name: string };
+      class UserRepository extends Repository<User> {}
+      const repository = new UserRepository({ database, tableName: '_users', uniqueSortColumn: 'id' });
+
+      const result = await repository.create({ name: 'Alice' });
+      expect(result).toMatchObject({ id: expect.any(Number), name: 'Alice' });
+      expect(Array.isArray(result)).toBe(false);
+    });
+
+    it('returns an array of objects when creating multiple entities without view', async () => {
+      type User = { id: string; name: string };
+      class UserRepository extends Repository<User> {}
+      const repository = new UserRepository({ database, tableName: '_users', uniqueSortColumn: 'id' });
+
+      const results = await repository.create([{ name: 'Alice' }, { name: 'Bob' }]);
+      expect(Array.isArray(results)).toBe(true);
+      expect(results).toHaveLength(2);
+      expect(results[0]).toMatchObject({ id: expect.any(Number), name: 'Alice' });
+      expect(results[1]).toMatchObject({ id: expect.any(Number), name: 'Bob' });
+    });
+
+    it('returns a single object when creating a single entity with view', async () => {
+      type User = { id: string; name: string; code: number };
+      class UserRepository extends Repository<User> {}
+      const repository = new UserRepository({ database, tableName: '_users', viewName: '_users2', uniqueSortColumn: 'id' });
+
+      const result = await repository.create({ name: 'Alice' });
+      expect(result).toMatchObject({ id: expect.any(Number), name: 'Alice', code: 5 });
+      expect(Array.isArray(result)).toBe(false);
+    });
+
+    it('returns an array of objects when creating multiple entities with view', async () => {
+      type User = { id: string; name: string; code: number };
+      class UserRepository extends Repository<User> {}
+      const repository = new UserRepository({ database, tableName: '_users', viewName: '_users2', uniqueSortColumn: 'id' });
+
+      const results = await repository.create([{ name: 'Alice' }, { name: 'Bob' }]);
+      expect(Array.isArray(results)).toBe(true);
+      expect(results).toHaveLength(2);
+      expect(results[0]).toMatchObject({ id: expect.any(Number), name: 'Alice', code: 5 });
+      expect(results[1]).toMatchObject({ id: expect.any(Number), name: 'Bob', code: 3 });
+    });
+
+    it('returns an empty array when creating an empty array', async () => {
+      type User = { id: string; name: string };
+      class UserRepository extends Repository<User> {}
+      const repository = new UserRepository({ database, tableName: '_users', uniqueSortColumn: 'id' });
+
+      const results = await repository.create([]);
+      expect(results).toEqual([]);
+    });
+  });
+
   describe('get', () => {
     beforeEach(async () => {
       await database.raw(`truncate table _users cascade`);
     });
 
     it('works with view', async () => {
-      type UserRow = { id: string; name: string; code: number };
-      type User = UserRow;
-      class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {}
+      type User = { id: string; name: string; code: number };
+      class UserRepository extends Repository<User> {}
       const repository = new UserRepository({ database, tableName: '_users', viewName: '_users2', uniqueSortColumn: 'id' });
 
       const row_created = await repository.create({ name: faker.person.firstName() });
@@ -43,9 +101,8 @@ describe('Repository', () => {
 
   describe('getem', () => {
     it('works without custom getem method', async () => {
-      type UserRow = { id: string; name: string; code: string };
-      type User = UserRow;
-      class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {}
+      type User = { id: string; name: string; code: string };
+      class UserRepository extends Repository<User> {}
       const repository = new UserRepository({ database, tableName: '_users', uniqueSortColumn: 'id' });
       const row = await repository.create({ name: faker.person.firstName() });
       const result = await repository.getem({});
@@ -55,11 +112,10 @@ describe('Repository', () => {
     });
 
     it('works with custom getem returning knex query', async () => {
-      type UserRow = { id: string; name: string };
-      type User = UserRow;
-      class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {
+      type User = { id: string; name: string };
+      class UserRepository extends Repository<User> {
         async getemQuery(_params = {}) {
-          const query = this.db<UserRow>(this.tableOrView).select().returning('*');
+          const query = this.db<User>(this.tableOrView).select().returning('*');
           return { type: 'query' as const, query };
         }
       }
@@ -72,9 +128,8 @@ describe('Repository', () => {
     });
 
     it('works with custom getem returning knex raw query', async () => {
-      type UserRow = { id: string; name: string };
-      type User = UserRow;
-      class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {
+      type User = { id: string; name: string };
+      class UserRepository extends Repository<User> {
         async getemQuery(_params = {}) {
           const sql = 'select * from _users2';
           const bindings = {};
@@ -91,8 +146,8 @@ describe('Repository', () => {
   });
 
   describe('runInTransaction', () => {
-    type TestRow = { id: string; name: string };
-    class TestRepository extends Repository<TestRow, TestRow, Partial<TestRow>, Partial<TestRow>> {}
+    type Test = { id: string; name: string };
+    class TestRepository extends Repository<Test> {}
     const testRepository = new TestRepository({ database, tableName: '_users' });
 
     it('should commit changes when transaction succeeds', async () => {
@@ -121,9 +176,8 @@ describe('Repository', () => {
 
   describe('misc', () => {
     describe('without policing', () => {
-      type UserRow = { id: string; name: string; code: string };
-      type User = UserRow;
-      class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {}
+      type User = { id: string; name: string; code: string };
+      class UserRepository extends Repository<User> {}
       const repository = new UserRepository({ database, tableName: '_users', uniqueSortColumn: 'id' });
 
       beforeEach(async () => {
@@ -185,9 +239,8 @@ describe('Repository', () => {
   });
 
   describe('with policing', () => {
-    type UserRow = { id: string; name: string; code: string };
-    type User = UserRow;
-    class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {
+    type User = { id: string; name: string; code: string };
+    class UserRepository extends Repository<User> {
       async police(query: Knex.QueryBuilder, _action: 'select' | 'update' | 'delete'): Promise<Knex.QueryBuilder> {
         return query.whereRaw('(1 = 1)');
       }
@@ -251,9 +304,8 @@ describe('Repository', () => {
     });
 
     describe('with broken policing', () => {
-      type UserRow = { id: string; name: string; code: string };
-      type User = UserRow;
-      class UserRepository extends Repository<User, UserRow, Partial<UserRow>, Partial<UserRow>> {
+      type User = { id: string; name: string; code: string };
+      class UserRepository extends Repository<User> {
         async police(query: Knex.QueryBuilder, _action: 'select' | 'update' | 'delete'): Promise<Knex.QueryBuilder> {
           return query.whereRaw('(1 = 0)');
         }

@@ -1,43 +1,66 @@
-import { Hono } from 'hono';
-import { AppErrorSchema, documentEndpoint, openapiRegistry, runFn, runSchemedFn } from '#framework/docs/middlewares.ts';
+import { Hono, type MiddlewareHandler } from 'hono';
+import { z } from 'zod';
+import { registerRoute } from '#framework/docs/middlewares.ts';
 import { userRepository } from './repositories.ts';
-import { CreateUserRequestSchema, GetUserRequestSchema, ListUsersRequestSchema, ListUsersResponseSchema, UserSchema } from './schemas.ts';
+import { UserCreateRequestSchema, UserGetRequestSchema, UserListRequestSchema, UserListSchema, UserSchema } from './schemas.ts';
+import { UserService } from './services.ts';
+
+const loggerMiddleware: MiddlewareHandler = async (c, next) => {
+  console.log(`[${c.req.method}] ${c.req.url}`);
+  await next();
+};
+
+const authMiddleware: MiddlewareHandler = async (c, next) => {
+  const token = c.req.header('Authorization');
+  if (!token) return c.json({ error: 'Unauthorized' }, 401);
+  await next();
+};
 
 export const router = new Hono();
 
 // GET /users
-documentEndpoint(openapiRegistry, 'get', '/users', ListUsersRequestSchema, ListUsersResponseSchema, {
-  section: 'Users',
-  description: 'List users.',
+registerRoute(router, {
+  method: 'get',
+  path: '/users',
+  requestSchema: UserListRequestSchema,
+  responseSchema: UserListSchema,
+  meta: { section: 'Users', description: 'List users.' },
+  middlewares: [loggerMiddleware],
+  handler: (params) => UserService.getem(params),
 });
-router.get(
-  '/users',
-  runSchemedFn(ListUsersRequestSchema, ListUsersResponseSchema, (params) => userRepository.getem({ limit: params.limit, offset: params.offset })),
-);
 
 // GET /users/:id
-documentEndpoint(openapiRegistry, 'get', '/users/:id', GetUserRequestSchema, UserSchema, {
-  section: 'Users',
-  description: 'Get user by ID.',
-  responses: {
-    404: { description: 'User not found', schema: AppErrorSchema },
+registerRoute(router, {
+  method: 'get',
+  path: '/users/:id',
+  requestSchema: UserGetRequestSchema,
+  responseSchema: UserSchema,
+  meta: {
+    section: 'Users',
+    description: 'Get user by ID.',
   },
+  middlewares: [loggerMiddleware],
+  handler: (params) => userRepository.get(params.id),
 });
-router.get(
-  '/users/:id',
-  runSchemedFn(GetUserRequestSchema, UserSchema, (params) => userRepository.get(params.id)),
-);
 
 // POST /users
-documentEndpoint(openapiRegistry, 'post', '/users', CreateUserRequestSchema, UserSchema, {
-  section: 'Users',
-  description: 'Create user.',
+registerRoute(router, {
+  method: 'post',
+  path: '/users',
+  requestSchema: UserCreateRequestSchema,
+  responseSchema: UserSchema,
+  meta: { section: 'Users', description: 'Create user.' },
+  middlewares: [loggerMiddleware],
+  handler: (params) => UserService.create(params),
 });
-router.post(
-  '/users',
-  runSchemedFn(CreateUserRequestSchema, UserSchema, (params) => userRepository.create(params)),
-);
 
-// undocumented and unschemed fn, using the same params + request query + request body merger of runSchemedFn
-const echoFn = (value: any) => value;
-router.post('/test-fn', runFn(echoFn));
+// POST /private
+registerRoute(router, {
+  method: 'post',
+  path: '/private',
+  requestSchema: z.object({}),
+  responseSchema: z.string(),
+  meta: { section: 'Private', description: 'Authenticated endpoint.' },
+  middlewares: [loggerMiddleware, authMiddleware],
+  handler: () => 'welcome!',
+});

@@ -18,15 +18,16 @@ example/
 │   ├── schema.sql          # initial db schema
 │   └── migrations/         # knex migrations
 │       └── 20260101000000_schema.ts 
-├── docs/                   # md files to add to api docs
+├── docs-assets/            # md files to add to api docs
 │   ├── 01-intro.md         
 │   ├── 02-about-markdown.md
 │   └── openapi.yml         # auto-generated openapi v3 specification
 ├── src/
-│   ├── index.ts            # hono server bootstrap
-│   ├── repositories.ts     # repositories definitions
-│   ├── routes.ts           # hono routes
-│   └── schemas.ts          # zod schemas
+│   ├── index.ts            # bootstrap hono server
+│   └── schemas.ts          # define zod schemas
+│   ├── repositories.ts     # define repositories
+│   ├── services.ts         # define services
+│   ├── routes.ts           # define hono routes
 └── README.md
 ```
 
@@ -45,7 +46,7 @@ Start the server:
 pnpm example
 ```
 
-Server ready at: http://localhost:3000/users.
+Server ready at: http://localhost:3000/users.  
 API documentation ready at: http://localhost:3000/docs.
 
 Try the API yourself:

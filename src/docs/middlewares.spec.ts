@@ -117,7 +117,7 @@ describe('Error handling & Middlewares', () => {
       expect(res.status).toBe(500);
       const data = await res.json();
       expect(data.code).toBe('INTERNAL_SERVER_ERROR');
-      expect(data.message).toBe('Database exploded');
+      expect(data.message).toBe('Internal Server Error');
     });
   });
 

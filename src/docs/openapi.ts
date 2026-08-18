@@ -18,7 +18,6 @@ export const generateOpenapiDoc = (openapiRegistry: OpenAPIRegistry, folderPath:
   const generator = new OpenApiGeneratorV3(openapiRegistry.definitions);
 
   // description will have the $include(path) directive for each .md file in folderPath, sorted
-
   const description = fs
     .readdirSync(folderPath)
     .filter((file) => file.endsWith('.md'))

@@ -1,2 +1,2 @@
-minimumReleaseAge: 1
+minimumReleaseAge: 1 # tofix
 dangerouslyAllowAllBuilds: true
