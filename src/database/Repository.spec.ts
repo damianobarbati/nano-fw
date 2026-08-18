@@ -5,7 +5,7 @@ import getConfig from '#framework/database/getConfig.ts';
 import getDatabase from '#framework/database/getDatabase.ts';
 import Repository from '#framework/database/Repository.ts';
 
-const database = getDatabase(getConfig('postgres://user:password@localhost:5432/fwxs'));
+const database = getDatabase(getConfig('postgres://user:password@localhost:5432/nanofw'));
 
 describe('Repository', () => {
   beforeAll(async () => {
