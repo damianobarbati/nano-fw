@@ -57,7 +57,7 @@ curl http://localhost:3000/users/1
 
 ## API documentation 
 
-API docs are auto-generated using the zod schemas provided for request and response to the `registerRoute` fn.
+API docs are auto-generated using the zod schemas provided for request and response to the `registerRoute` fn.  
 You can group endpoints under tags using `RouteMeta.section`.  
 You sort tags passing an optional `tagOrder`; groups not included in the `tagOrder` stay in alphabetical order.  
 
