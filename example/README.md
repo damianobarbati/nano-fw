@@ -59,7 +59,7 @@ curl http://localhost:3000/users/1
 
 API docs are auto-generated using the zod schemas provided for request and response to the `registerRoute` fn.  
 You can group endpoints under tags using `RouteMeta.section`.  
-You sort tags passing an optional `tagOrder`; groups not included in the `tagOrder` stay in alphabetical order.  
+You sort tags passing an optional `tagOrder` param; groups not included in the `tagOrder` stay in alphabetical order.  
 
 ```ts
 registerDocsRoute(app, '/docs', docsAssets, { tagOrder: ['Users', 'Payments'] });
@@ -72,4 +72,9 @@ registerRoute(router, {
   meta: { section: 'Users', description: 'List users.' },
   handler: (params) => AuthService.getem(params),
 });
+```
+
+You can use a custom logo displayed in the top-left section providing the `logoUrl` param:
+```ts
+registerDocsRoute(app, '/docs', docsAssets, { logoUrl: 'https://xyz.com/logo.svg', tagOrder: ['Users', 'Payments'] });
 ```

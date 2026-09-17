@@ -12,6 +12,8 @@ const { pkg_name } = getPackage();
 export interface DocsRouteOptions {
   /** Tags to show first in Scalar, in the specified order. */
   tagOrder?: readonly string[];
+  /** Logo URL to use for the Scalar favicon and sidebar. */
+  logoUrl?: string;
 }
 
 const serializeForInlineScript = (value: unknown) =>
@@ -33,6 +35,7 @@ export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: stri
     html = html.replaceAll('XYZ', pkg_name);
     html = html.replaceAll('/docs/openapi.json', specPath);
     html = html.replace('__TAG_ORDER__', serializeForInlineScript(options.tagOrder ?? []));
+    html = html.replace('__LOGO_URL__', serializeForInlineScript(options.logoUrl ?? '/logo.png'));
     return c.html(html);
   });
 

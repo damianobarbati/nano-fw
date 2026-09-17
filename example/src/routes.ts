@@ -61,3 +61,21 @@ registerRoute(router, {
   middlewares: [loggerMiddleware, authMiddleware],
   handler: () => 'welcome!',
 });
+
+registerRoute(router, {
+  method: 'get',
+  path: '/abc-random',
+  requestSchema: z.object({}),
+  responseSchema: z.string(),
+  meta: { description: 'A non-tagged endpoint.' },
+  handler: () => 'welcome!',
+});
+
+registerRoute(router, {
+  method: 'get',
+  path: '/xyz-random',
+  requestSchema: z.object({}),
+  responseSchema: z.string(),
+  meta: { description: 'Another non-tagged endpoint.' },
+  handler: () => 'welcome!',
+});

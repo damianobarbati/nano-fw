@@ -6,17 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <script id="api-reference" data-url="/docs/openapi.json" data-proxy-url="https://proxy.scalar.com"></script>
+    <div id="scalar-api-reference"></div>
     <script>
     // ref: https://scalar.com/products/api-references/configuration#configuration-options
     const tagOrder = __TAG_ORDER__;
+    const logoUrl = __LOGO_URL__;
     const tagPositions = new Map(tagOrder.map((tag, index) => [tag, index]));
     const tagName = (tag) => typeof tag === 'string' ? tag : tag.name;
 
     const scalarConfig = {
+      url: '/docs/openapi.json',
+      proxyUrl: 'https://proxy.scalar.com',
       defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
       baseServerURL: window.location.href,
-      favicon: '/logo.png',
+      favicon: logoUrl,
       siteConfig: {
         name: 'XYZ API reference',
       },
@@ -29,14 +32,12 @@
       hideClientButton: true,
       hideTestRequestButton: true,
       hideDarkModeToggle: true,
-      showToolbar: 'never',
+      showDeveloperTools: 'never',
       // https://github.com/scalar/scalar/blob/main/documentation/themes.md#advanced-styling
       withDefaultFonts: true,
       // https://github.com/scalar/scalar/blob/main/documentation/configuration.md#customcss-string
       customCss: `section.introduction-section .section-column:nth-child(2) { display: none !important; }`,
     };
-    document.getElementById('api-reference').dataset.configuration = JSON.stringify(scalarConfig);
-
     // This remains JavaScript (rather than part of the JSON configuration).
     const tagsSorter = (a, b) => {
       const aName = tagName(a);
@@ -53,14 +54,14 @@
     // add logo
     const onSidebarReady = (sidebar) => {
       const img = document.createElement('img');
-      img.src = '/logo.png';
+      img.src = logoUrl;
       img.alt = 'XYZ logo';
       img.style.padding = '20px';
       sidebar.prepend(img);
     };
 
     const observer = new MutationObserver((_mutations, observer) => {
-      const sidebar = document.querySelector('.sidebar');
+      const sidebar = document.querySelector('.t-doc__sidebar');
       if (!sidebar) return;
       onSidebarReady(sidebar);
       observer.disconnect();
@@ -69,7 +70,7 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/scalar-api-reference/1.43.12/standalone.min.js" integrity="sha512-JXi8BgS0xzX9xfY/HdswOFaNO4scdBnJZRqYH8wn7ABwEzVbbgphWWs7uy0poZI9MMNGJLwXbNS8c6RulMjfdg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-    document.dispatchEvent(new CustomEvent('scalar:update-references-config', { detail: { tagsSorter } }));
+    Scalar.createApiReference('#scalar-api-reference', { ...scalarConfig, tagsSorter });
     </script>
   </body>
 </html>

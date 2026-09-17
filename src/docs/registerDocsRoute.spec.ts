@@ -13,40 +13,34 @@ const docsDir = path.resolve(__dirname, '../../example/docs-assets');
 const getScalarConfig = (html: string) => {
   const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
   const configScript = scripts.find((script) => script.includes('const scalarConfig'));
-  const sorterScript = scripts.find((script) => script.includes('scalar:update-references-config'));
+  const sorterScript = scripts.find((script) => script.includes('Scalar.createApiReference'));
   if (!configScript || !sorterScript) throw new Error('Scalar configuration scripts were not rendered');
 
-  let tagsSorter: any;
-  const apiReference = { dataset: {} as Record<string, string> };
+  let configuration: any = {};
   const document = {
     body: {},
     createElement: () => ({ style: {} }),
-    dispatchEvent: (event: { detail: { tagsSorter: unknown } }) => {
-      tagsSorter = event.detail.tagsSorter;
-    },
-    getElementById: () => apiReference,
     querySelector: () => null,
   };
   class MutationObserver {
     disconnect() {}
     observe() {}
   }
-  class CustomEvent {
-    detail: unknown;
+  const Scalar = {
+    createApiReference: (_selector: string, initialConfiguration: Record<string, unknown>) => {
+      configuration = initialConfiguration;
+      return { updateConfiguration: () => {} };
+    },
+  };
 
-    constructor(_type: string, init: { detail: unknown }) {
-      this.detail = init.detail;
-    }
-  }
-
-  new Function('window', 'document', 'MutationObserver', 'CustomEvent', `${configScript}\n${sorterScript}`)(
+  new Function('window', 'document', 'MutationObserver', 'Scalar', `${configScript}\n${sorterScript}`)(
     { location: { href: 'http://localhost/docs' } },
     document,
     MutationObserver,
-    CustomEvent,
+    Scalar,
   );
 
-  return { ...JSON.parse(apiReference.dataset.configuration), tagsSorter };
+  return configuration;
 };
 
 describe('registerDocsRoute', () => {
@@ -69,7 +63,7 @@ describe('registerDocsRoute', () => {
     expect(htmlRes.headers.get('content-type')).toContain('text/html');
 
     const htmlText = await htmlRes.text();
-    expect(htmlText).toContain('data-url="/docs/openapi.json"');
+    expect(htmlText).toContain("url: '/docs/openapi.json'");
     expect(htmlText).not.toContain('XYZ');
   });
 
@@ -83,7 +77,7 @@ describe('registerDocsRoute', () => {
     const htmlRes = await app.request('/api/v1/documentation/');
     expect(htmlRes.status).toBe(200);
     const htmlText = await htmlRes.text();
-    expect(htmlText).toContain('data-url="/api/v1/documentation/openapi.json"');
+    expect(htmlText).toContain("url: '/api/v1/documentation/openapi.json'");
   });
 
   it('keeps the three-argument call valid and sorts tags alphabetically by default', async () => {
@@ -94,6 +88,28 @@ describe('registerDocsRoute', () => {
     const scalarConfig = getScalarConfig(htmlText);
     expect(['Websites', 'Authentication', 'Accounts'].sort(scalarConfig.tagsSorter)).toEqual(['Accounts', 'Authentication', 'Websites']);
     expect(scalarConfig.operationsSorter).toBe('alpha');
+  });
+
+  it('uses the default logo when logoUrl is omitted', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir);
+
+    const htmlText = await (await app.request('/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(scalarConfig.favicon).toBe('/logo.png');
+    expect(htmlText).toContain('const logoUrl = "/logo.png";');
+  });
+
+  it('uses logoUrl for the Scalar favicon and sidebar logo', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/s/docs', docsDir, { logoUrl: '/s/docs/logo.svg' });
+
+    const htmlText = await (await app.request('/s/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(scalarConfig.favicon).toBe('/s/docs/logo.svg');
+    expect(htmlText).toContain('const logoUrl = "/s/docs/logo.svg";');
+    expect(htmlText).toContain("document.querySelector('.t-doc__sidebar')");
+    expect(htmlText).toContain('img.src = logoUrl;');
   });
 
   it('puts ordered tags first and sorts unlisted tags alphabetically', async () => {

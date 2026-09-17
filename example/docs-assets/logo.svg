@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48" role="img" aria-labelledby="title">
+  <title id="title">Nano FW example logo</title>
+  <rect width="48" height="48" rx="12" fill="#2563eb"/>
+  <path d="M14 34V14l20 20V14" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+  <text x="60" y="31" fill="#1e293b" font-family="Arial, sans-serif" font-size="20" font-weight="700">nano-fw</text>
+</svg>
