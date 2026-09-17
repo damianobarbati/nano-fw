@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serveStatic } from '@hono/node-server/serve-static';
 import type { Hono } from 'hono';
+import type { OpenAPIObject } from 'openapi3-ts/oas30';
 import getPackage from '#framework/getPackage.ts';
 import { generateOpenapiDoc, openapiRegistry } from './openapi.ts';
 
@@ -14,6 +15,8 @@ export interface DocsRouteOptions {
   tagOrder?: readonly string[];
   /** Logo URL to use for the Scalar favicon and sidebar. */
   logoUrl?: string;
+  /** Transform the generated OpenAPI document for an individual request. */
+  transformOpenapiDocument?: (input: { document: OpenAPIObject; request: Request }) => OpenAPIObject | Promise<OpenAPIObject>;
 }
 
 const serializeForInlineScript = (value: unknown) =>
@@ -27,7 +30,12 @@ export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: stri
   const openapiJson = JSON.stringify(openapiSpec);
 
   // serve openapi spec in-memory
-  app.get(specPath, (c) => c.body(openapiJson, 200, { 'Content-Type': 'application/json; charset=utf-8' }));
+  app.get(specPath, async (c) => {
+    if (!options.transformOpenapiDocument) return c.body(openapiJson, 200, { 'Content-Type': 'application/json; charset=utf-8' });
+
+    const document = await options.transformOpenapiDocument({ document: openapiSpec, request: c.req.raw });
+    return c.body(JSON.stringify(document), 200, { 'Content-Type': 'application/json; charset=utf-8' });
+  });
 
   // serve docs.html
   app.get(routePath, async (c) => {

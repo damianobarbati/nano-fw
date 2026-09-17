@@ -80,6 +80,46 @@ describe('registerDocsRoute', () => {
     expect(htmlText).toContain("url: '/api/v1/documentation/openapi.json'");
   });
 
+  it('uses /openapi.json in Scalar when docs are registered at the root path', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/', docsDir);
+
+    const specRes = await app.request('/openapi.json');
+    expect(specRes.status).toBe(200);
+
+    const htmlText = await (await app.request('/')).text();
+    expect(htmlText).toContain("url: '/openapi.json'");
+    expect(htmlText).not.toContain("url: '/docs/openapi.json'");
+  });
+
+  it('applies a synchronous OpenAPI document transformer without mutating the base document', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir, {
+      transformOpenapiDocument: ({ document }) => {
+        const { '/test-route': _removedPath, ...paths } = document.paths;
+        return { ...document, paths };
+      },
+    });
+
+    const specJson = await (await app.request('/docs/openapi.json')).json();
+    expect(specJson.paths['/test-route']).toBeUndefined();
+  });
+
+  it('applies an asynchronous OpenAPI document transformer based on request headers', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir, {
+      transformOpenapiDocument: async ({ document, request }) => ({
+        ...document,
+        info: { ...document.info, title: request.headers.get('x-api-title') ?? document.info.title },
+      }),
+    });
+
+    const customSpec = await (await app.request('/docs/openapi.json', { headers: { 'x-api-title': 'Partner API' } })).json();
+    const defaultSpec = await (await app.request('/docs/openapi.json')).json();
+    expect(customSpec.info.title).toBe('Partner API');
+    expect(defaultSpec.info.title).not.toBe('Partner API');
+  });
+
   it('keeps the three-argument call valid and sorts tags alphabetically by default', async () => {
     const app = new Hono();
     registerDocsRoute(app, '/docs', docsDir);
