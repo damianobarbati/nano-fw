@@ -143,6 +143,7 @@ describe('Error handling & Middlewares', () => {
       expect(defs.length).toBeGreaterThan(0);
       const route = defs.find((d: any) => d.type === 'route') as any;
       expect(route).toBeDefined();
+      expect(route.route.tags).toEqual(['Users']);
       expect(route.route.responses['200']).toBeDefined();
       expect(route.route.responses['400']).toBeDefined();
       expect(route.route.responses['500']).toBeDefined();

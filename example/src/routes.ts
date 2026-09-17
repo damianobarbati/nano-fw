@@ -35,10 +35,7 @@ registerRoute(router, {
   path: '/users/:id',
   requestSchema: UserGetRequestSchema,
   responseSchema: UserSchema,
-  meta: {
-    section: 'Users',
-    description: 'Get user by ID.',
-  },
+  meta: { section: 'Users', description: 'Get user by ID.' },
   middlewares: [loggerMiddleware],
   handler: (params) => userRepository.get(params.id),
 });
@@ -57,7 +54,7 @@ registerRoute(router, {
 // POST /private
 registerRoute(router, {
   method: 'post',
-  path: '/private',
+  path: '/private/xyz',
   requestSchema: z.object({}),
   responseSchema: z.string(),
   meta: { section: 'Private', description: 'Authenticated endpoint.' },

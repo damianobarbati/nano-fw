@@ -9,7 +9,15 @@ import { generateOpenapiDoc, openapiRegistry } from './openapi.ts';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const { pkg_name } = getPackage();
 
-export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: string) => {
+export interface DocsRouteOptions {
+  /** Tags to show first in Scalar, in the specified order. */
+  tagOrder?: readonly string[];
+}
+
+const serializeForInlineScript = (value: unknown) =>
+  JSON.stringify(value).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029');
+
+export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: string, options: DocsRouteOptions = {}) => {
   const cleanRoutePath = routePath.replace(/\/$/, '');
   const specPath = `${cleanRoutePath}/openapi.json`;
 
@@ -24,6 +32,7 @@ export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: stri
     let html = await fsp.readFile(path.join(__dirname, 'docs.html'), 'utf-8');
     html = html.replaceAll('XYZ', pkg_name);
     html = html.replaceAll('/docs/openapi.json', specPath);
+    html = html.replace('__TAG_ORDER__', serializeForInlineScript(options.tagOrder ?? []));
     return c.html(html);
   });
 

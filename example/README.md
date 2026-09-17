@@ -13,20 +13,20 @@ You should end up in a structure like this:
 ```text
 example/
 ├── database/
-│   ├── db.ts               # db config
-│   ├── schema.sql          # initial db schema
-│   └── migrations/         # knex migrations
-│       └── 20260101000000_schema.ts 
-├── docs-assets/            # md files to add to api docs
-│   ├── 01-intro.md         
+│   ├── db.ts         # db config
+│   ├── schema.sql      # initial db schema
+│   └── migrations/     # knex migrations
+│     └── 20260101000000_schema.ts 
+├── docs-assets/      # md files to add to api docs
+│   ├── 01-intro.md     
 │   ├── 02-about-markdown.md
-│   └── openapi.yml         # auto-generated openapi v3 specification
+│   └── openapi.yml     # auto-generated openapi v3 specification
 ├── src/
-│   ├── index.ts            # bootstrap hono server
-│   └── schemas.ts          # define zod schemas
-│   ├── repositories.ts     # define repositories
-│   ├── services.ts         # define services
-│   ├── routes.ts           # define hono routes
+│   ├── index.ts      # bootstrap hono server
+│   └── schemas.ts      # define zod schemas
+│   ├── repositories.ts   # define repositories
+│   ├── services.ts     # define services
+│   ├── routes.ts       # define hono routes
 └── README.md
 ```
 
@@ -53,4 +53,23 @@ Try the API yourself:
 curl -X POST -H "Content-Type: application/json" -d '{"name": "John Doe", "email": "john@example.com"}' http://localhost:3000/users
 curl http://localhost:3000/users
 curl http://localhost:3000/users/1
+```
+
+## API documentation 
+
+API docs are auto-generated using the zod schemas provided for request and response to the `registerRoute` fn.
+You can group endpoints under tags using `RouteMeta.section`.  
+You sort tags passing an optional `tagOrder`; groups not included in the `tagOrder` stay in alphabetical order.  
+
+```ts
+registerDocsRoute(app, '/docs', docsAssets, { tagOrder: ['Users', 'Payments'] });
+
+registerRoute(router, {
+  method: 'get',
+  path: '/users',
+  requestSchema: UserListRequestSchema,
+  responseSchema: UserListSchema,
+  meta: { section: 'Users', description: 'List users.' },
+  handler: (params) => AuthService.getem(params),
+});
 ```

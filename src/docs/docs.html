@@ -9,6 +9,10 @@
     <script id="api-reference" data-url="/docs/openapi.json" data-proxy-url="https://proxy.scalar.com"></script>
     <script>
     // ref: https://scalar.com/products/api-references/configuration#configuration-options
+    const tagOrder = __TAG_ORDER__;
+    const tagPositions = new Map(tagOrder.map((tag, index) => [tag, index]));
+    const tagName = (tag) => typeof tag === 'string' ? tag : tag.name;
+
     const scalarConfig = {
       defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
       baseServerURL: window.location.href,
@@ -20,6 +24,7 @@
       forceDarkModeState: 'light',
       defaultOpenAllTags: true,
       tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
       documentDownloadType: 'none',
       hideClientButton: true,
       hideTestRequestButton: true,
@@ -31,6 +36,19 @@
       customCss: `section.introduction-section .section-column:nth-child(2) { display: none !important; }`,
     };
     document.getElementById('api-reference').dataset.configuration = JSON.stringify(scalarConfig);
+
+    // This remains JavaScript (rather than part of the JSON configuration).
+    const tagsSorter = (a, b) => {
+      const aName = tagName(a);
+      const bName = tagName(b);
+      const aPosition = tagPositions.get(aName);
+      const bPosition = tagPositions.get(bName);
+
+      if (aPosition !== undefined && bPosition !== undefined) return aPosition - bPosition;
+      if (aPosition !== undefined) return -1;
+      if (bPosition !== undefined) return 1;
+      return aName.localeCompare(bName);
+    };
 
     // add logo
     const onSidebarReady = (sidebar) => {
@@ -50,5 +68,8 @@
     observer.observe(document.body, { childList: true, subtree: true });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/scalar-api-reference/1.43.12/standalone.min.js" integrity="sha512-JXi8BgS0xzX9xfY/HdswOFaNO4scdBnJZRqYH8wn7ABwEzVbbgphWWs7uy0poZI9MMNGJLwXbNS8c6RulMjfdg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+    document.dispatchEvent(new CustomEvent('scalar:update-references-config', { detail: { tagsSorter } }));
+    </script>
   </body>
 </html>

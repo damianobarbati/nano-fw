@@ -15,7 +15,7 @@ app.route('/', router);
 
 // 2. serve ScalarUI at /docs, adding the markdowns in docsDir
 const docsAssets = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../docs-assets');
-registerDocsRoute(app, '/docs', docsAssets);
+registerDocsRoute(app, '/docs', docsAssets, { tagOrder: ['Users'] });
 
 // 3. start the server
 const port = Number(process.env.PORT) || 3000;

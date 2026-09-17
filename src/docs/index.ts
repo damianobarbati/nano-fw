@@ -1,2 +1,2 @@
 export * from './middlewares.ts';
-export { registerDocsRoute } from './registerDocsRoute.ts';
+export { type DocsRouteOptions, registerDocsRoute } from './registerDocsRoute.ts';

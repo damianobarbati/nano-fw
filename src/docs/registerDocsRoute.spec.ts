@@ -10,6 +10,45 @@ import z from '#framework/zod.ts';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const docsDir = path.resolve(__dirname, '../../example/docs-assets');
 
+const getScalarConfig = (html: string) => {
+  const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
+  const configScript = scripts.find((script) => script.includes('const scalarConfig'));
+  const sorterScript = scripts.find((script) => script.includes('scalar:update-references-config'));
+  if (!configScript || !sorterScript) throw new Error('Scalar configuration scripts were not rendered');
+
+  let tagsSorter: any;
+  const apiReference = { dataset: {} as Record<string, string> };
+  const document = {
+    body: {},
+    createElement: () => ({ style: {} }),
+    dispatchEvent: (event: { detail: { tagsSorter: unknown } }) => {
+      tagsSorter = event.detail.tagsSorter;
+    },
+    getElementById: () => apiReference,
+    querySelector: () => null,
+  };
+  class MutationObserver {
+    disconnect() {}
+    observe() {}
+  }
+  class CustomEvent {
+    detail: unknown;
+
+    constructor(_type: string, init: { detail: unknown }) {
+      this.detail = init.detail;
+    }
+  }
+
+  new Function('window', 'document', 'MutationObserver', 'CustomEvent', `${configScript}\n${sorterScript}`)(
+    { location: { href: 'http://localhost/docs' } },
+    document,
+    MutationObserver,
+    CustomEvent,
+  );
+
+  return { ...JSON.parse(apiReference.dataset.configuration), tagsSorter };
+};
+
 describe('registerDocsRoute', () => {
   it('serves openapi spec from memory at /docs/openapi.json and rendered api docs at /docs', async () => {
     const app = new Hono();
@@ -45,5 +84,24 @@ describe('registerDocsRoute', () => {
     expect(htmlRes.status).toBe(200);
     const htmlText = await htmlRes.text();
     expect(htmlText).toContain('data-url="/api/v1/documentation/openapi.json"');
+  });
+
+  it('keeps the three-argument call valid and sorts tags alphabetically by default', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir);
+
+    const htmlText = await (await app.request('/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(['Websites', 'Authentication', 'Accounts'].sort(scalarConfig.tagsSorter)).toEqual(['Accounts', 'Authentication', 'Websites']);
+    expect(scalarConfig.operationsSorter).toBe('alpha');
+  });
+
+  it('puts ordered tags first and sorts unlisted tags alphabetically', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir, { tagOrder: ['Authentication', 'Accounts'] });
+
+    const htmlText = await (await app.request('/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(['Websites', 'Accounts', 'Payments', 'Authentication'].sort(scalarConfig.tagsSorter)).toEqual(['Authentication', 'Accounts', 'Payments', 'Websites']);
   });
 });
