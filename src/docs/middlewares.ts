@@ -37,14 +37,6 @@ export const documentEndpoint = (openapiRegistry: OpenAPIRegistry, method: HTTPM
       description: meta?.responseDescription || 'Successful response',
       content: { 'application/json': { schema: responseSchema } },
     },
-    400: {
-      description: 'Request validation failed',
-      content: { 'application/json': { schema: ValidationErrorSchema } },
-    },
-    500: {
-      description: 'Internal Server Error',
-      content: { 'application/json': { schema: AppErrorSchema } },
-    },
   };
 
   if (meta?.responses) {

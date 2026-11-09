@@ -122,7 +122,14 @@ describe('Error handling & Middlewares', () => {
   });
 
   describe('documentEndpoint with error responses', () => {
-    it('registers default 200, 400, 500 and custom responses in openapi', () => {
+    it('registers only the success response by default', () => {
+      const registry = new OpenAPIRegistry();
+      documentEndpoint(registry, 'get', '/health', z.object({}), z.boolean());
+      const route = registry.definitions.find((definition) => definition.type === 'route');
+      expect(route?.type === 'route' && Object.keys(route.route.responses)).toEqual(['200']);
+    });
+
+    it('registers only 200 and explicitly configured responses in openapi', () => {
       const registry = new OpenAPIRegistry();
       const ReqSchema = z.object({ id: z.number() });
       const ResSchema = z.object({ name: z.string() });
@@ -145,8 +152,8 @@ describe('Error handling & Middlewares', () => {
       expect(route).toBeDefined();
       expect(route.route.tags).toEqual(['Users']);
       expect(route.route.responses['200']).toBeDefined();
-      expect(route.route.responses['400']).toBeDefined();
-      expect(route.route.responses['500']).toBeDefined();
+      expect(route.route.responses['400']).toBeUndefined();
+      expect(route.route.responses['500']).toBeUndefined();
       expect(route.route.responses['404']).toBeDefined();
       expect(route.route.responses['404'].description).toBe('User not found');
     });
