@@ -36,7 +36,10 @@
       // https://github.com/scalar/scalar/blob/main/documentation/themes.md#advanced-styling
       withDefaultFonts: true,
       // https://github.com/scalar/scalar/blob/main/documentation/configuration.md#customcss-string
-      customCss: `section.introduction-section .section-column:nth-child(2) { display: none !important; }`,
+      customCss: `
+        section.introduction-section .section-column:nth-child(2) { display: none !important; }
+        section.introduction-section .flex.gap-1\\.5 { display: none !important; }
+      `,
     };
     // This remains JavaScript (rather than part of the JSON configuration).
     const tagsSorter = (a, b) => {
