@@ -30,28 +30,28 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
-    "@hono/node-server": "^2.1.1",
+    "@hono/node-server": "^2.1.6",
     "@hono/zod-openapi": "^1.6.3",
-    "@scalar/hono-api-reference": "^0.12.2",
+    "@scalar/hono-api-reference": "^0.12.18",
     "dayjs": "^1.11.23",
     "debug": "^4.4.3",
     "find-up": "^8.0.0",
-    "hono": "^4.13.8",
+    "hono": "^4.13.17",
     "knex": "3.3.0",
-    "openapi3-ts": "^4.6.1",
-    "pg": "^8.23.0",
+    "openapi3-ts": "^4.6.2",
+    "pg": "^8.23.1",
     "yaml": "^2.9.1",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
+    "@biomejs/biome": "^2.6.6",
     "@faker-js/faker": "^10.6.0",
-    "@types/node": "^26.6.1",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
-    "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/coverage-v8": "^5.1.0",
     "envk": "^4.0.5",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
   }
 }
