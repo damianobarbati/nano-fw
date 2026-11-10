@@ -152,6 +152,37 @@ describe('registerDocsRoute', () => {
     expect(htmlText).toContain('img.src = logoUrl;');
   });
 
+  it('uses separate URLs for the favicon and sidebar logo', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir, { logoUrl: '/mark.svg', faviconUrl: '/logo.svg' });
+
+    const htmlText = await (await app.request('/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(scalarConfig.favicon).toEqual('/logo.svg');
+    expect(htmlText).toContain('const logoUrl = "/mark.svg";');
+  });
+
+  it('keeps the default sidebar logo when only faviconUrl is set', async () => {
+    const app = new Hono();
+    registerDocsRoute(app, '/docs', docsDir, { faviconUrl: '/favicon.svg' });
+
+    const htmlText = await (await app.request('/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(scalarConfig.favicon).toEqual('/favicon.svg');
+    expect(htmlText).toContain('const logoUrl = "/logo.png";');
+  });
+
+  it('safely serializes special characters in faviconUrl', async () => {
+    const app = new Hono();
+    const faviconUrl = '/favicon.svg?value="</script><script>&\u2028\u2029';
+    registerDocsRoute(app, '/docs', docsDir, { faviconUrl });
+
+    const htmlText = await (await app.request('/docs')).text();
+    const scalarConfig = getScalarConfig(htmlText);
+    expect(scalarConfig.favicon).toEqual(faviconUrl);
+    expect(htmlText).not.toContain(faviconUrl);
+  });
+
   it('puts ordered tags first and sorts unlisted tags alphabetically', async () => {
     const app = new Hono();
     registerDocsRoute(app, '/docs', docsDir, { tagOrder: ['Authentication', 'Accounts'] });

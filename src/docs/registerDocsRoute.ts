@@ -13,8 +13,10 @@ const { pkg_name } = getPackage();
 export interface DocsRouteOptions {
   /** Tags to show first in Scalar, in the specified order. */
   tagOrder?: readonly string[];
-  /** Logo URL to use for the Scalar favicon and sidebar. */
+  /** Sidebar logo URL. Also used as the favicon when faviconUrl is omitted. */
   logoUrl?: string;
+  /** Favicon URL. Defaults to logoUrl, then /logo.png. */
+  faviconUrl?: string;
   /** Transform the generated OpenAPI document for an individual request. */
   transformOpenapiDocument?: (input: { document: OpenAPIObject; request: Request }) => OpenAPIObject | Promise<OpenAPIObject>;
 }
@@ -44,6 +46,7 @@ export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: stri
     html = html.replaceAll('/docs/openapi.json', specPath);
     html = html.replace('__TAG_ORDER__', serializeForInlineScript(options.tagOrder ?? []));
     html = html.replace('__LOGO_URL__', serializeForInlineScript(options.logoUrl ?? '/logo.png'));
+    html = html.replace('__FAVICON_URL__', serializeForInlineScript(options.faviconUrl ?? options.logoUrl ?? '/logo.png'));
     return c.html(html);
   });
 

@@ -11,6 +11,7 @@
     // ref: https://scalar.com/products/api-references/configuration#configuration-options
     const tagOrder = __TAG_ORDER__;
     const logoUrl = __LOGO_URL__;
+    const faviconUrl = __FAVICON_URL__;
     const tagPositions = new Map(tagOrder.map((tag, index) => [tag, index]));
     const tagName = (tag) => typeof tag === 'string' ? tag : tag.name;
 
@@ -19,7 +20,7 @@
       proxyUrl: 'https://proxy.scalar.com',
       defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
       baseServerURL: window.location.href,
-      favicon: logoUrl,
+      favicon: faviconUrl,
       siteConfig: {
         name: 'XYZ API reference',
       },
