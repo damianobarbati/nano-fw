@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
 import { documentEndpoint } from '#framework/docs/middlewares.ts';
 import { openapiRegistry } from '#framework/docs/openapi.ts';
-import { registerDocsRoute } from '#framework/docs/registerDocsRoute.ts';
+import { registerDocsRoute, type ScalarOptions } from '#framework/docs/registerDocsRoute.ts';
 import z from '#framework/zod.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -44,6 +44,72 @@ const getScalarConfig = (html: string) => {
 };
 
 describe('registerDocsRoute', () => {
+  it('passes Scalar settings through and overrides framework defaults', async () => {
+    const app = new Hono();
+    const scalarOptions = {
+      theme: 'moon',
+      forceDarkModeState: 'dark',
+      hideDarkModeToggle: false,
+      layout: 'classic',
+      withDefaultFonts: false,
+      favicon: '/custom-icon.svg',
+      url: '/external-openapi.json',
+      tagsSorter: 'alpha',
+      operationsSorter: 'method',
+      defaultHttpClient: { targetKey: 'js', clientKey: 'fetch' },
+      title: 'Partner API',
+      customCss: ':root { --scalar-font: Inter, sans-serif; }',
+    } satisfies ScalarOptions;
+    registerDocsRoute(app, '/docs', docsDir, { scalarOptions, faviconUrl: '/logo.svg', tagOrder: ['Websites'] });
+
+    const html = await (await app.request('/docs')).text();
+    expect(getScalarConfig(html)).toMatchObject(scalarOptions);
+    expect((await app.request('/docs/openapi.json')).status).toBe(200);
+  });
+
+  it('preserves nested Scalar settings and arrays', async () => {
+    const app = new Hono();
+    const scalarOptions = {
+      sources: [
+        { title: 'Partner API', url: '/partner.json' },
+        { title: 'Public API', url: '/public.json' },
+      ],
+      defaultHttpClient: { targetKey: 'shell', clientKey: 'curl' },
+    } satisfies ScalarOptions;
+    registerDocsRoute(app, '/docs', docsDir, { scalarOptions });
+
+    const html = await (await app.request('/docs')).text();
+    expect(getScalarConfig(html)).toMatchObject(scalarOptions);
+  });
+
+  it('safely preserves inline-script characters and replacement tokens in Scalar options', async () => {
+    const app = new Hono();
+    const customCss = ':root { --example: "</script><script>&<>\u2028\u2029 $& $` $\' $$ ` \\"; }\n/* next line */';
+    registerDocsRoute(app, '/docs', docsDir, { scalarOptions: { customCss } });
+
+    const html = await (await app.request('/docs')).text();
+    expect(html).not.toContain('</script><script>');
+    expect(getScalarConfig(html).customCss).toEqual(customCss);
+  });
+
+  it('rejects browser callbacks in Scalar options at registration', () => {
+    const app = new Hono();
+    expect(() =>
+      registerDocsRoute(app, '/docs', docsDir, {
+        scalarOptions: {
+          // @ts-expect-error Browser callbacks cannot be serialized to JSON.
+          tagsSorter: (a: string, b: string) => a.localeCompare(b),
+        },
+      }),
+    ).toThrow('Scalar options must be JSON-compatible. Browser callbacks are not supported.');
+  });
+
+  it('rejects nested browser callbacks instead of silently dropping them', () => {
+    const app = new Hono();
+    const scalarOptions = { sources: [{ url: '/spec.json', onSpecUpdate: () => {} }] } as unknown as ScalarOptions;
+    expect(() => registerDocsRoute(app, '/docs', docsDir, { scalarOptions })).toThrow('Browser callbacks are not supported.');
+  });
+
   it('serves openapi spec from memory at /docs/openapi.json and rendered api docs at /docs', async () => {
     const app = new Hono();
     documentEndpoint(openapiRegistry, 'get', '/test-route', z.object({}), z.object({ status: z.string() }), { section: 'Test', description: 'Test endpoint' });
@@ -126,6 +192,7 @@ describe('registerDocsRoute', () => {
 
     const htmlText = await (await app.request('/docs')).text();
     const scalarConfig = getScalarConfig(htmlText);
+    expect(scalarConfig).toMatchObject({ theme: 'default', forceDarkModeState: 'light', hideDarkModeToggle: true });
     expect(['Websites', 'Authentication', 'Accounts'].sort(scalarConfig.tagsSorter)).toEqual(['Accounts', 'Authentication', 'Websites']);
     expect(scalarConfig.operationsSorter).toBe('alpha');
   });

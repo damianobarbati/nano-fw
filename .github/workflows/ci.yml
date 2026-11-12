@@ -11,7 +11,7 @@ concurrency:
 on:
   push:
     branches: ["main"]
-    tags: ['*']
+    tags: ["*"]
   pull_request:
     branches: ["main"]
 
@@ -29,8 +29,8 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
-          node-version-file: 'package.json'
-          cache: 'pnpm'
+          node-version-file: "package.json"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --silent --frozen-lockfile --prefer-offline --prod=false
@@ -64,8 +64,8 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
-          node-version-file: 'package.json'
-          cache: 'pnpm'
+          node-version-file: "package.json"
+          cache: "pnpm"
           registry-url: https://registry.npmjs.org/
 
       - name: Release

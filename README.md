@@ -7,12 +7,14 @@ It provides type-safe request and response validation, automatic OpenAPI generat
 ## Requirements
 
 Dependencies:
+
 - `fnm` (eg: `brew install fnm`)
 - add `eval "$(fnm env --use-on-cd)"` into your `~/.zprofile` or `~/.profile`
 
 ## Development
 
 Setup:
+
 ```sh
 fnm install
 npm install -g corepack
@@ -22,12 +24,14 @@ pnpm install
 ```
 
 Linting:
+
 ```sh
 pnpm lint # lint
 pnpm tsc # typecheck
 ```
 
 Testing:
+
 ```sh
 docker run -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
 pnpm test
@@ -36,11 +40,13 @@ pnpm test
 ## Usage
 
 Install:
+
 ```sh
 pnpm i nano-fw
 ```
 
 Add the suggested scripts to your `package.json`:
+
 ```json
 {
   "scripts": {
