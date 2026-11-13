@@ -1,0 +1,50 @@
+{
+  "name": "nano-fw",
+  "version": "1.3.1",
+  "description": "Nano sized framework.",
+  "license": "MIT",
+  "author": "Damiano Barbati <damiano.barbati@gmail.com> (https://github.com/damianobarbati)",
+  "repository": "https://github.com/damianobarbati/nano-fw",
+  "type": "module",
+  "engines": {
+    "node": ">=26.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./docs": {
+      "types": "./dist/docs/index.d.ts",
+      "import": "./dist/docs/index.js",
+      "default": "./dist/docs/index.js"
+    },
+    "./*.ts": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@hono/node-server": "^2.1.8",
+    "@scalar/hono-api-reference": "^0.12.20",
+    "debug": "^4.4.3",
+    "find-up": "^8.0.0",
+    "hono": "^4.13.18",
+    "knex": "3.3.0",
+    "openapi3-ts": "^4.6.2",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/docs/docs.html dist/docs/ && cp src/database/migration.stub.ts dist/database/",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "prepack": "npm run build"
+  }
+}

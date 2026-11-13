@@ -15,10 +15,11 @@
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2,
-    "lineWidth": 180
+    "lineWidth": 120
   },
   "javascript": {
     "formatter": {
+      "expand": "never",
       "quoteStyle": "single"
     }
   },

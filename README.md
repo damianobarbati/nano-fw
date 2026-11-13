@@ -1,64 +1,59 @@
 # nano-fw
 
-`nano-fw` (nano-sized framework) is a minimal, schema-driven TypeScript micro-framework powered by Hono, Zod, Knex, and OpenAPI.  
-It's small, pragmatic, ESM-first and TypeScript-first.  
-It provides type-safe request and response validation, automatic OpenAPI generation with Scalar docs, and transparent transactional repositories via AsyncLocalStorage.
+`nano-fw` (nano-sized framework) is a micro-framework powered by Hono, Zod, Knex, Vitest.  
+It's pragmatic, ESM-first and TypeScript-first.
 
-## Requirements
+It provides:
 
-Dependencies:
+- type-safe request and response validation
+- automatic API docs generation with OpenAPI and Scalar from your Zod schemas
+- typed repositories
 
-- `fnm` (eg: `brew install fnm`)
-- add `eval "$(fnm env --use-on-cd)"` into your `~/.zprofile` or `~/.profile`
+Requires Node.js >=26.
 
 ## Development
+
+Requirements:
+
+- `fnm` (eg: `brew install fnm`)
+- `docker` (eg: `brew install orbstack`)
 
 Setup:
 
 ```sh
+docker rm -f nano-fw
+docker run -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
 fnm install
-npm install -g corepack
-corepack enable
-corepack install
-pnpm install
+npm install
+npm run build
 ```
 
 Linting:
 
 ```sh
-pnpm lint # lint
-pnpm tsc # typecheck
+npm run lint
 ```
 
 Testing:
 
 ```sh
-docker run -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
-pnpm test
+npm -ws run test
 ```
 
-## Usage
-
-Install:
+Run example:
 
 ```sh
-pnpm i nano-fw
+npm -w=nano-fw run dev
+
+npm -w=example run db:migrate
+npm -w=example run db:seed 
+npm -w=example run dev
 ```
 
-Add the suggested scripts to your `package.json`:
+Example running at http://localhost:8080
 
-```json
-{
-  "scripts": {
-    "test": "vitest run --reporter=default --reporter=junit --outputFile=/tmp/junit.xml --coverage",
-    "start:dev": "NODE_ENV=development NODE_OPTIONS='--no-warnings --enable-source-maps --import=amaro/transform' node --env-file-if-exists=../../.env --watch ./src/index.ts",
-    "start": "NODE_ENV=production NODE_OPTIONS='--no-warnings --enable-source-maps --import=amaro/transform' node ./src/index.ts",
-    "db:migrate": "NODE_ENV=development NODE_OPTIONS='--no-warnings --enable-source-maps --import=amaro/transform' knex migrate:latest --knexfile=./database/db.ts",
-    "db:seed": "NODE_ENV=development NODE_OPTIONS='--no-warnings --enable-source-maps --import=amaro/transform' knex seed:run --knexfile=./database/db.ts",
-    "db:migrate:make": "NODE_ENV=development NODE_OPTIONS='--no-warnings --enable-source-maps --import=amaro/transform' knex migrate:make --knexfile=./database/db.ts",
-    "db:seed:make": "NODE_ENV=development NODE_OPTIONS='--no-warnings --enable-source-maps --import=amaro/transform' knex seed:make --knexfile=./database/db.ts"
-  }
-}
+## Publishing
+
+```sh
+npm run release
 ```
-
-Now check the [example](./example) directory for a complete working setup.
