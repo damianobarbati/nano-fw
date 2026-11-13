@@ -43,7 +43,7 @@ Run the following commands from the repository root.
 Start the database if it is not already running:
 
 ```sh
-docker run --name nano-fw --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw -d postgres:18-alpine
+docker run -q --name nano-fw --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw -d postgres:18-alpine
 ```
 
 Run migrations:

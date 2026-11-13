@@ -22,7 +22,7 @@ Setup:
 
 ```sh
 docker rm -f nano-fw
-docker run -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
+docker run -q -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
 fnm install
 npm install
 npm run build
