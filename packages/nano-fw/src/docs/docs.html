@@ -44,6 +44,10 @@
         .t-doc__sidebar a[href*="scalar.com"][href*="utm_source=powered-by"] { display: none !important; }
         section.introduction-section .section-column:nth-child(2) { display: none !important; }
         section.introduction-section .flex.gap-1\\.5 { display: none !important; }
+        .nano-fw-errors .section-columns > .section-column:nth-child(2) { display: none !important; }
+        .nano-fw-errors .markdown { max-width: 100%; overflow-x: auto; }
+        .nano-fw-errors .markdown table { width: 100%; max-width: none; table-layout: auto; }
+        .nano-fw-errors .markdown tr > :nth-child(-n+2) { width: 1%; white-space: nowrap; word-break: normal; }
       `,
     };
     // This remains JavaScript (rather than part of the JSON configuration).
@@ -78,6 +82,7 @@
       const navigation = sidebar.querySelector('a[href$="#tag/errors"]')?.closest('[data-sidebar-id]');
 
       if (!errors || !navigation) return false;
+      section.classList.add('nano-fw-errors');
       if (errors.parentElement.lastElementChild !== errors) errors.parentElement.append(errors);
       if (navigation.parentElement.lastElementChild !== navigation) navigation.parentElement.append(navigation);
       return true;
