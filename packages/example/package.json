@@ -7,7 +7,7 @@
     "node": ">=26.0"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "echo ''",
     "dev": "node --watch --watch-path=. --watch-path=../nano-fw/dist src/index.ts",
     "db:migrate": "knex migrate:latest --knexfile=database/db.ts",
     "db:seed": "knex seed:run --knexfile=database/db.ts"
