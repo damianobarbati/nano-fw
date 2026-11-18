@@ -119,7 +119,7 @@ describe('registerDocsRoute', () => {
 
     expect(specRes.status).toEqual(200);
     expect(specRes.headers.get('content-type')).toContain('application/json');
-    expect(spec).toMatchObject({ openapi: '3.0.0', info: { title: expect.stringContaining('API reference') } });
+    expect(spec).toMatchObject({ openapi: '3.0.0', info: { title: 'API Reference' } });
     expect(spec.paths).toHaveProperty('/test-route');
 
     const htmlRes = await app.request(routePath);
@@ -128,6 +128,7 @@ describe('registerDocsRoute', () => {
     expect(htmlRes.status).toEqual(200);
     expect(htmlRes.headers.get('content-type')).toContain('text/html');
     expect(getScalarConfig(html).url).toEqual(specPath);
+    expect(getScalarConfig(html).customCss).not.toContain('.section-header-wrapper');
     expect(html).not.toContain('XYZ');
   });
 
@@ -156,6 +157,7 @@ describe('registerDocsRoute', () => {
     const app = new Hono();
 
     registerDocsRoute(app, '/docs', docsDir, {
+      title: 'Example API',
       transformOpenapiDocument: async ({ document, request }) => ({
         ...document,
         info: { ...document.info, title: request.headers.get('x-api-title') ?? document.info.title },
@@ -169,7 +171,7 @@ describe('registerDocsRoute', () => {
     const defaultSpec = await (await app.request('/docs/openapi.json')).json();
 
     expect(customSpec.info.title).toEqual('Partner API');
-    expect(defaultSpec.info.title).not.toEqual('Partner API');
+    expect(defaultSpec.info.title).toEqual('Example API');
   });
 
   it('keeps the three-argument call valid and sorts tags alphabetically by default', async () => {

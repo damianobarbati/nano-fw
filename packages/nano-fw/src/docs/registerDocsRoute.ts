@@ -22,6 +22,8 @@ type JsonConfiguration<Value> = Value extends (...args: never[]) => unknown
 export type ScalarOptions = JsonConfiguration<Partial<ApiReferenceConfiguration>>;
 
 export interface DocsRouteOptions {
+  /** Scalar introduction heading. Defaults to API Reference. */
+  title?: string;
   /** JSON-compatible Scalar settings. Explicit values override framework defaults. Browser callbacks are not supported. */
   scalarOptions?: ScalarOptions;
   /** Tags to show first in Scalar, in the specified order. */
@@ -58,7 +60,7 @@ export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: stri
   const specPath = `${cleanRoutePath}/openapi.json`;
   const scalarOptionsJson = serializeForInlineScript(options.scalarOptions ?? {});
 
-  const openapiSpec = generateOpenapiDoc(openapiRegistry, docsAssets);
+  const openapiSpec = generateOpenapiDoc(openapiRegistry, docsAssets, options.title ?? 'API Reference');
   const openapiJson = JSON.stringify(openapiSpec);
 
   // serve openapi spec in-memory

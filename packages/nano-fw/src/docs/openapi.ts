@@ -20,7 +20,11 @@ const { pkg_name, pkg_version } = getPackage();
 
 export const openapiRegistry = new OpenAPIRegistry();
 
-export const generateOpenapiDoc = (openapiRegistry: OpenAPIRegistry, folderPath: string) => {
+export const generateOpenapiDoc = (
+  openapiRegistry: OpenAPIRegistry,
+  folderPath: string,
+  title = `${pkg_name} API reference`,
+) => {
   const generator = new OpenApiGeneratorV3(openapiRegistry.definitions);
 
   const description = fs
@@ -30,10 +34,7 @@ export const generateOpenapiDoc = (openapiRegistry: OpenAPIRegistry, folderPath:
     .map((file) => fs.readFileSync(path.join(folderPath, file), 'utf8').trim())
     .join('\n');
 
-  const document = generator.generateDocument({
-    openapi: '3.0.0',
-    info: { version: pkg_version, title: `${pkg_name} API reference`, description },
-  });
+  const document = generator.generateDocument({ openapi: '3.0.0', info: { version: pkg_version, title, description } });
 
   const schemas = document.components?.schemas;
   const errors = schemas?.Errors;
