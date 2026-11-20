@@ -1,8 +1,7 @@
-import { getRefId, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { AppError } from '../AppError.ts';
-import { AppErrorSchema } from './errorSchemas.ts';
+import { ApplicationError } from '../ApplicationError.ts';
+import { ApplicationErrorSchema } from './errorSchemas.ts';
 import { openapiRegistry } from './openapi.ts';
 import { registerErrors } from './registerErrors.ts';
 
@@ -18,20 +17,17 @@ afterEach(() => {
 
 describe('registerErrors', () => {
   describe('registration', () => {
-    it('documents plain definitions and AppError instances in catalog order', () => {
-      const start = openapiRegistry.definitions.length;
-      const originalDescription = AppErrorSchema.description;
+    it('documents plain definitions and ApplicationError instances in catalog order', () => {
+      const originalDescription = ApplicationErrorSchema.description;
 
       registerErrors({
         DOMAIN_OCCUPIED: { status: 409, message: 'Domain is occupied.' },
-        UNAUTHORIZED: new AppError(401, 'UNAUTHORIZED', 'Sign in first.'),
+        UNAUTHORIZED: new ApplicationError(401, 'UNAUTHORIZED', 'Sign in first.'),
       });
 
-      const generator = new OpenApiGeneratorV3(openapiRegistry.definitions.slice(start));
-      const document = generator.generateComponents();
-      expect(document.components?.schemas?.Errors).toMatchObject({
-        type: 'object',
-        properties: { code: { type: 'string' }, message: { type: 'string' } },
+      const entry = openapiRegistry.definitions.at(-1);
+      expect(entry).toMatchObject({
+        type: 'catalog',
         description: [
           '| Code | HTTP status | Message |',
           '| --- | --- | --- |',
@@ -40,37 +36,31 @@ describe('registerErrors', () => {
         ].join('\n'),
       });
 
-      expect(AppErrorSchema.description).toEqual(originalDescription);
-      expect(getRefId(AppErrorSchema)).toEqual('ErrorResponse');
+      expect(ApplicationErrorSchema.description).toEqual(originalDescription);
+      expect(ApplicationErrorSchema.meta()?.id).toEqual('ErrorResponse');
     });
 
     it('uses a custom response schema without changing its description or identity', () => {
-      const start = openapiRegistry.definitions.length;
       const schema = z.object({ error: z.string() }).meta({ id: 'CustomError', description: 'Original response.' });
 
       registerErrors({ INVALID_REQUEST: { status: 400, message: 'Invalid request.' } }, schema);
 
-      const generator = new OpenApiGeneratorV3(openapiRegistry.definitions.slice(start));
-      const document = generator.generateComponents();
-      expect(document.components?.schemas?.Errors).toMatchObject({
-        type: 'object',
-        properties: { error: { type: 'string' } },
-        required: ['error'],
+      const entry = openapiRegistry.definitions.at(-1);
+      expect(entry).toMatchObject({
+        type: 'catalog',
         description: expect.stringContaining('| INVALID_REQUEST | 400 | Invalid request. |'),
       });
 
       expect(schema.description).toEqual('Original response.');
-      expect(getRefId(schema)).toEqual('CustomError');
+      expect(schema.meta()?.id).toEqual('CustomError');
     });
 
     it('keeps placeholders, pipes and line breaks as table text', () => {
-      const start = openapiRegistry.definitions.length;
-
       registerErrors({ INVALID_INPUT: { status: 400, message: 'Use A | B & <email>.\nTry again.' } });
 
-      const generator = new OpenApiGeneratorV3(openapiRegistry.definitions.slice(start));
-      const document = generator.generateComponents();
-      expect(document.components?.schemas?.Errors).toMatchObject({
+      const entry = openapiRegistry.definitions.at(-1);
+      expect(entry).toMatchObject({
+        type: 'catalog',
         description: expect.stringContaining('| INVALID_INPUT | 400 | Use A \\| B &amp; &lt;email&gt;. Try again. |'),
       });
     });

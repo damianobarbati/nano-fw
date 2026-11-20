@@ -1,6 +1,7 @@
-import type { Context, ErrorHandler } from 'hono';
-import { ZodError, type ZodType } from 'zod';
-import { AppError } from '../AppError.ts';
+import type { Context, ErrorHandler, MiddlewareHandler } from 'hono';
+import { getCookie } from 'hono/cookie';
+import { $ZodError, $ZodNullable, $ZodObject, type $ZodType, globalRegistry, safeParseAsync } from 'zod/v4/core';
+import { ApplicationError } from '../ApplicationError.ts';
 
 /**
  * Extracts and returns parameters from an incoming request.
@@ -39,35 +40,58 @@ export type ZodErrorSource = 'request' | 'response';
  * Runs a function with the extracted parameters, validates the input and output using Zod schemas, and returns the result as a JSON response.
  */
 export const runFnSchemed = <TRequest, TResponse>(
-  requestSchema: ZodType<TRequest>,
-  responseSchema: ZodType<TResponse>,
+  requestSchema: $ZodType<TRequest>,
+  responseSchema: $ZodType<TResponse>,
   fn: (params: TRequest, c: Context) => Promise<TResponse> | TResponse,
-) => {
+): MiddlewareHandler => {
+  const object = requestSchema instanceof $ZodNullable ? requestSchema._zod.def.innerType : requestSchema;
+  const fields: { field: string; name: string; location: string }[] = [];
+
+  if (object instanceof $ZodObject) {
+    for (const [field, schema] of Object.entries(object._zod.def.shape)) {
+      const param = globalRegistry.get(schema as $ZodType)?.param as { in?: string; name?: string } | undefined;
+      if (param?.in) fields.push({ field, name: param.name ?? field, location: param.in });
+    }
+  }
+
   return async (c: Context) => {
     const unsafe_input = await requestToParams(c);
-    const input = await requestSchema.safeParseAsync(unsafe_input);
+
+    if (!c.get('auth_params')) {
+      for (const { field, name, location } of fields) {
+        if (location === 'header') unsafe_input[field] = c.req.header(name);
+
+        if (location === 'cookie') unsafe_input[field] = getCookie(c, name);
+
+        if (location === 'query') unsafe_input[field] = c.req.query(name);
+
+        if (location === 'path') unsafe_input[field] = c.req.param(name);
+      }
+    }
+
+    const input = await safeParseAsync(requestSchema, unsafe_input);
     if (!input.success) throw Object.assign(input.error, { source: 'request' satisfies ZodErrorSource });
 
     const unsafe_output = await fn(input.data, c);
-    const output = await responseSchema.safeParseAsync(unsafe_output);
+    const output = await safeParseAsync(responseSchema, unsafe_output);
     if (!output.success) throw Object.assign(output.error, { source: 'response' satisfies ZodErrorSource });
     return c.json(output.data);
   };
 };
 
 export const errorHandler: ErrorHandler = (err, c) => {
-  if (err instanceof AppError) {
+  if (err instanceof ApplicationError) {
     const body: Record<string, unknown> = { code: err.code, message: err.message || err.code };
 
     if (err.payload !== undefined) body.payload = err.payload;
     return c.json(body, err.status as any);
   }
 
-  if (err instanceof ZodError || ('issues' in err && 'source' in (err as any))) {
+  if (err instanceof $ZodError || ('issues' in err && 'source' in (err as any))) {
     const source = (err as any).source ?? 'request';
 
     if (source === 'request') {
-      const appError = new AppError(400, 'VALIDATION_ERROR', 'Validation error on request', err as ZodError);
+      const appError = new ApplicationError(400, 'VALIDATION_ERROR', 'Validation error on request', err as $ZodError);
       return c.json({ code: appError.code, message: appError.message, payload: appError.payload }, 400);
     }
 

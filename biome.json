@@ -32,7 +32,20 @@
       "a11y": "off",
       "suspicious": {
         "noExplicitAny": "off"
+      },
+      "nursery": {
+        "noTailwindRawColors": "error",
+        "useTailwindSortedClasses": "error",
+        "useTailwindStaticClassStrings": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "error"
       }
     }
+  },
+  "tailwind": {
+    "stylesheet": "./packages/website/src/index.css",
+    "attributes": ["class", "className"],
+    "mergeFunctions": ["cx", "cn"]
   }
 }

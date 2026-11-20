@@ -1,24 +1,22 @@
 {
   "name": "nano-fw-monorepo",
   "version": "2.0.5",
+  "description": "Nano sized framework.",
+  "license": "MIT",
+  "author": "Damiano Barbati <damiano.barbati@gmail.com> (https://github.com/damianobarbati)",
+  "repository": "https://github.com/damianobarbati/nano-fw",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=26.0"
   },
-  "workspaces": [
-    "packages/nano-fw",
-    "packages/example"
-  ],
   "scripts": {
-    "prepare": "npm audit --audit-level critical",
-    "oxlint": "oxlint --fix",
-    "biome": "biome check --write --unsafe",
-    "tsc": "tsc",
-    "lint": "npm run oxlint && npm run biome && npm run tsc",
-    "test": "npm run test --workspaces",
-    "build": "npm run build --workspace=nano-fw",
-    "release": "npm publish --workspace=nano-fw"
+    "prepare": "pnpm audit --audit-level critical",
+    "lint": "oxlint --fix && biome check --write --unsafe && tsc --noEmit",
+    "test": "pnpm -r run test",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -F nano-fw run build && pnpm -F website run build",
+    "release": "pnpm -F nano-fw publish --no-git-checks"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.7",
@@ -28,5 +26,6 @@
     "oxlint-better": "1.0.3",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
-  }
+  },
+  "packageManager": "pnpm@10.33.0"
 }

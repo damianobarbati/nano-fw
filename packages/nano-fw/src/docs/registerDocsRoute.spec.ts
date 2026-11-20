@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { documentEndpoint, openapiRegistry } from './openapi.ts';
-import { registerDocsRoute, type ScalarOptions } from './registerDocsRoute.ts';
+import { routeDocs, type ScalarOptions } from './registerDocsRoute.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const docsDir = path.resolve(__dirname, '../../../example/docs-assets');
@@ -51,7 +51,18 @@ afterEach(() => {
   openapiRegistry.definitions.splice(0, openapiRegistry.definitions.length, ...definitions);
 });
 
-describe('registerDocsRoute', () => {
+describe('routeDocs', () => {
+  it('serves documentation when the assets directory is missing', async () => {
+    const app = new Hono();
+
+    routeDocs(app, '/docs', { docsAssets: path.join(docsDir, 'missing-directory') });
+
+    const response = await app.request('/docs/openapi.json');
+    expect(await response.json()).toMatchObject({ info: { description: '' } });
+    expect((await app.request('/docs')).status).toEqual(200);
+    expect((await app.request('/missing.svg')).status).toEqual(404);
+  });
+
   it('passes Scalar settings through and overrides framework defaults', async () => {
     const app = new Hono();
 
@@ -74,7 +85,7 @@ describe('registerDocsRoute', () => {
       customCss: ':root { --scalar-font: Inter, sans-serif; }',
     } satisfies ScalarOptions;
 
-    registerDocsRoute(app, '/docs', docsDir, { scalarOptions, faviconUrl: '/logo.svg', tagOrder: ['Websites'] });
+    routeDocs(app, '/docs', { docsAssets: docsDir, scalarOptions, faviconUrl: '/logo.svg', tagOrder: ['Websites'] });
 
     const html = await (await app.request('/docs')).text();
     expect(getScalarConfig(html)).toMatchObject(scalarOptions);
@@ -84,7 +95,7 @@ describe('registerDocsRoute', () => {
     const app = new Hono();
     const customCss = ':root { --example: "</script><script>&<>\u2028\u2029 $& $` $\' $$ ` \\"; }\n/* next line */';
 
-    registerDocsRoute(app, '/docs', docsDir, { scalarOptions: { customCss } });
+    routeDocs(app, '/docs', { docsAssets: docsDir, scalarOptions: { customCss } });
 
     const html = await (await app.request('/docs')).text();
     expect(html).not.toContain('</script><script>');
@@ -97,7 +108,8 @@ describe('registerDocsRoute', () => {
   ])('rejects $depth browser callbacks at registration', ({ scalarOptions }) => {
     const app = new Hono();
     expect(() =>
-      registerDocsRoute(app, '/docs', docsDir, {
+      routeDocs(app, '/docs', {
+        docsAssets: docsDir,
         // @ts-expect-error Browser callbacks cannot be serialized to JSON.
         scalarOptions,
       }),
@@ -112,7 +124,7 @@ describe('registerDocsRoute', () => {
     const app = new Hono();
 
     documentEndpoint(openapiRegistry, 'get', '/test-route', z.object({}), z.object({ status: z.string() }));
-    registerDocsRoute(app, routePath, docsDir);
+    routeDocs(app, routePath, { docsAssets: docsDir });
 
     const specRes = await app.request(specPath);
     const spec = await specRes.json();
@@ -137,7 +149,8 @@ describe('registerDocsRoute', () => {
 
     documentEndpoint(openapiRegistry, 'get', '/test-route', z.object({}), z.boolean());
 
-    registerDocsRoute(app, '/docs', docsDir, {
+    routeDocs(app, '/docs', {
+      docsAssets: docsDir,
       transformOpenapiDocument: ({ document, request }) => {
         if (!request.headers.has('x-hide-route')) return document;
 
@@ -156,7 +169,8 @@ describe('registerDocsRoute', () => {
   it('applies an asynchronous OpenAPI document transformer based on request headers', async () => {
     const app = new Hono();
 
-    registerDocsRoute(app, '/docs', docsDir, {
+    routeDocs(app, '/docs', {
+      docsAssets: docsDir,
       title: 'Example API',
       transformOpenapiDocument: async ({ document, request }) => ({
         ...document,
@@ -177,7 +191,7 @@ describe('registerDocsRoute', () => {
   it('keeps the three-argument call valid and sorts tags alphabetically by default', async () => {
     const app = new Hono();
 
-    registerDocsRoute(app, '/docs', docsDir);
+    routeDocs(app, '/docs', { docsAssets: docsDir });
 
     const htmlText = await (await app.request('/docs')).text();
     const scalarConfig = getScalarConfig(htmlText);
@@ -201,7 +215,7 @@ describe('registerDocsRoute', () => {
   ])('uses logo $logo and favicon $favicon for $options', async ({ options, logo, favicon }) => {
     const app = new Hono();
 
-    registerDocsRoute(app, '/docs', docsDir, options);
+    routeDocs(app, '/docs', { ...options, docsAssets: docsDir });
 
     const html = await (await app.request('/docs')).text();
     expect(getScalarConfig(html).favicon).toEqual(favicon);
@@ -212,7 +226,7 @@ describe('registerDocsRoute', () => {
     const app = new Hono();
     const faviconUrl = '/favicon.svg?value="</script><script>&\u2028\u2029';
 
-    registerDocsRoute(app, '/docs', docsDir, { faviconUrl });
+    routeDocs(app, '/docs', { docsAssets: docsDir, faviconUrl });
 
     const htmlText = await (await app.request('/docs')).text();
     const scalarConfig = getScalarConfig(htmlText);
@@ -223,7 +237,7 @@ describe('registerDocsRoute', () => {
   it('puts ordered tags first and sorts unlisted tags alphabetically', async () => {
     const app = new Hono();
 
-    registerDocsRoute(app, '/docs', docsDir, { tagOrder: ['Errors', 'Authentication', 'Accounts'] });
+    routeDocs(app, '/docs', { docsAssets: docsDir, tagOrder: ['Errors', 'Authentication', 'Accounts'] });
 
     const htmlText = await (await app.request('/docs')).text();
     const scalarConfig = getScalarConfig(htmlText);

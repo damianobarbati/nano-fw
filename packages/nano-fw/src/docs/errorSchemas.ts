@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const AppErrorSchema = z
+export const ApplicationErrorSchema = z
   .object({
     code: z.string().meta({ example: 'NOT_FOUND' }),
     message: z.string().meta({ example: 'Resource not found' }),
@@ -8,7 +8,7 @@ export const AppErrorSchema = z
   })
   .meta({ id: 'ErrorResponse' });
 
-export const ValidationErrorSchema = AppErrorSchema.extend({
+export const ValidationErrorSchema = ApplicationErrorSchema.extend({
   code: z.string().meta({ example: 'VALIDATION_ERROR' }),
   message: z.string().meta({ example: 'Validation error on request' }),
   payload: z

@@ -1,5 +1,5 @@
 import { Hono, type MiddlewareHandler } from 'hono';
-import { registerRoute } from 'nano-fw/http/registerRoute.ts';
+import { route } from 'nano-fw';
 import { z } from 'zod';
 import { UNAUTHORIZED } from './errors.ts';
 import { UserRepository } from './repositories.ts';
@@ -28,7 +28,7 @@ const authMiddleware: MiddlewareHandler = async (c, next) => {
 
 export const router = new Hono();
 
-registerRoute(router, {
+route(router, {
   method: 'post',
   path: '/user',
   requestSchema: UserCreateRequestSchema,
@@ -38,7 +38,7 @@ registerRoute(router, {
   handler: (params) => UserService.create(params),
 });
 
-registerRoute(router, {
+route(router, {
   method: 'get',
   path: '/user/:id',
   requestSchema: UserGetRequestSchema,
@@ -48,7 +48,7 @@ registerRoute(router, {
   handler: (params) => UserRepository.get(params.id),
 });
 
-registerRoute(router, {
+route(router, {
   method: 'put',
   path: '/user/:id',
   requestSchema: UserUpdateRequestSchema,
@@ -61,7 +61,7 @@ registerRoute(router, {
   },
 });
 
-registerRoute(router, {
+route(router, {
   method: 'delete',
   path: '/user/:id',
   requestSchema: UserGetRequestSchema,
@@ -74,7 +74,7 @@ registerRoute(router, {
   },
 });
 
-registerRoute(router, {
+route(router, {
   method: 'post',
   path: '/user/list',
   requestSchema: UserListRequestSchema,
@@ -85,20 +85,18 @@ registerRoute(router, {
 });
 
 // POST /private
-registerRoute(router, {
+route(router, {
   method: 'post',
   path: '/private/xyz',
-  requestSchema: z.object({}),
   responseSchema: z.string(),
   meta: { section: 'Private', description: 'Authenticated endpoint.' },
   middlewares: [loggerMiddleware, authMiddleware],
   handler: () => 'welcome!',
 });
 
-registerRoute(router, {
+route(router, {
   method: 'get',
   path: '/xyz',
-  requestSchema: z.object({}),
   responseSchema: z.string(),
   meta: { description: 'A non-tagged endpoint.' },
   handler: () => 'welcome!',

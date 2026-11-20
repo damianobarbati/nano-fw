@@ -12,7 +12,7 @@ const viewName = '_repository_domains_view';
 const repository = new Repository<Domain>({ database, tableName });
 const userRepository = new Repository<UserRow>({ database, tableName: '_users' });
 
-class HydratedRepository extends Repository<UserRow, UserResource> {
+class HydratedRepository extends Repository<UserResource, UserRow> {
   actions: string[] = [];
   hydrationCalls = 0;
 

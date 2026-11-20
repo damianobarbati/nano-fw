@@ -25,12 +25,7 @@ export type UserCreateRequest = z.infer<typeof UserCreateRequestSchema>;
 
 export type AuthLoginRequest = Pick<UserCreateRequest, 'email' | 'password'>;
 
-export const UserGetRequestSchema = z.object({
-  id: z
-    .string()
-    .pipe(z.coerce.number())
-    .meta({ param: { in: 'path', name: 'id' }, example: 1 }),
-});
+export const UserGetRequestSchema = z.object({ id: z.coerce.number().int().positive() });
 
 export type UserGetRequest = z.infer<typeof UserGetRequestSchema>;
 

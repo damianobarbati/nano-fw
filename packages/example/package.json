@@ -16,8 +16,8 @@
     "@hono/node-server": "^2.1.8",
     "hono": "^4.13.18",
     "knex": "3.3.0",
-    "zod": "^4.6.7",
-    "nano-fw": "^1.3.1"
+    "nano-fw": "workspace:^",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^26.6.6"

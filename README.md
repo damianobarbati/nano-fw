@@ -11,6 +11,31 @@ It provides:
 
 Requires Node.js >=26.
 
+## First route
+
+```ts
+import { serve } from '@hono/node-server';
+import { Hono } from 'hono';
+import { route } from 'nano-fw';
+import { z } from 'zod';
+
+const app = new Hono();
+
+route(app, {
+  method: 'get',
+  path: '/hello/:name',
+  requestSchema: z.object({ name: z.string() }),
+  responseSchema: z.object({ message: z.string() }),
+  handler: ({ name }) => ({ message: `Hello, ${name}!` }),
+});
+
+serve({ fetch: app.fetch, port: 8080 });
+```
+
+`curl http://localhost:8080/hello/Ada` returns `{"message":"Hello, Ada!"}`.
+
+See the [installation guide](packages/nano-fw/README.md) and [database example](packages/example/README.md).
+
 ## Development
 
 Requirements:
@@ -21,39 +46,41 @@ Requirements:
 Setup:
 
 ```sh
-docker rm -f nano-fw
-docker run -q -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:18-alpine
 fnm install
-npm install
-npm run build
+npm install -g corepack
+corepack enable
+corepack install
+pnpm install
+pnpm run build
 ```
 
 Linting:
 
 ```sh
-npm run lint
+pnpm run lint
 ```
 
 Testing:
 
 ```sh
-npm -ws run test
+docker rm -f nano-fw
+docker run -q -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:19-alpine
+pnpm -r test
 ```
 
 Run example:
 
 ```sh
-npm -w=nano-fw run dev
-
-npm -w=example run db:migrate
-npm -w=example run db:seed 
-npm -w=example run dev
+pnpm dev
+pnpm -F example run db:migrate
+pnpm -F example run db:seed
+pnpm -F example run dev
 ```
 
 Example running at http://localhost:8080
 
-## Publishing
+## Releasing
 
 ```sh
-npm run release
+pnpm run release
 ```

@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { documentEndpoint, generateOpenapiDoc } from './openapi.ts';
+import { documentEndpoint, generateOpenapiDoc, OpenAPIRegistry } from './openapi.ts';
 
 describe('OpenAPI generation', () => {
   it('moves the error catalog into a standalone tag without changing other models or routes', () => {
@@ -91,6 +90,7 @@ describe('OpenAPI generation', () => {
 
       expect(document.components?.schemas?.MetadataResponse).toEqual({
         type: 'object',
+        additionalProperties: false,
         properties: { name: { type: 'string' } },
         required: ['name'],
       });

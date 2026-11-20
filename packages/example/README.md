@@ -43,29 +43,29 @@ Run the following commands from the repository root.
 Start the database if it is not already running:
 
 ```sh
-docker run -q --name nano-fw --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw -d postgres:18-alpine
+docker run -q --name nano-fw --restart unless-stopped -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw -d postgres:19-alpine
 ```
 
 Run migrations:
 
 ```sh
-npm run build
-npm run db:migrate --workspace=example
+pnpm run build
+pnpm -F example run db:migrate
 ```
 
 Start the library compiler watcher in one terminal:
 
 ```sh
-npm run dev --workspace=nano-fw
+pnpm -F nano-fw run dev
 ```
 
 Start the server in another terminal:
 
 ```sh
-npm run dev --workspace=example
+pnpm -F example run dev
 ```
 
-Library TypeScript changes compile automatically and restart the server. Changes to the library HTML or migration stub require `npm run build`.
+Library TypeScript changes compile automatically and restart the server. Changes to the library HTML or migration stub require `pnpm run build`.
 
 API server and docs at: http://localhost:8080
 
@@ -89,12 +89,12 @@ The updated SQL schema assumes a fresh example database. Existing databases need
 
 ## API documentation 
 
-API docs are auto-generated using the zod schemas provided for request and response to the `registerRoute` fn.  
+API docs are auto-generated using the zod schemas provided for request and response to the `route` fn.  
 You can group endpoints under tags using `RouteMeta.section`.  
 You sort tags passing an optional `tagOrder` param; groups not included in the `tagOrder` stay in alphabetical order.
 
 ```ts
-registerRoute(router, {
+route(router, {
   method: 'post',
   path: '/user/list',
   requestSchema: UserListRequestSchema,
@@ -104,19 +104,20 @@ registerRoute(router, {
 });
 
 app.route('/', router);
-registerDocsRoute(app, '/', docsAssets, { tagOrder: ['Users', 'Private'] });
+routeDocs(app, '/', { docsAssets, tagOrder: ['Users', 'Private'] });
 ```
 
 You can use a custom logo displayed in the top-left section providing the `logoUrl` param:
 
 ```ts
-registerDocsRoute(app, '/', docsAssets, { logoUrl: '/mark.svg', tagOrder: ['Users', 'Private'] });
+routeDocs(app, '/', { docsAssets, logoUrl: '/mark.svg', tagOrder: ['Users', 'Private'] });
 ```
 
 Pass JSON-compatible Scalar settings through `scalarOptions`:
 
 ```ts
-registerDocsRoute(app, '/', docsAssets, {
+routeDocs(app, '/', {
+  docsAssets,
   logoUrl: '/mark.svg',
   faviconUrl: '/logo.svg',
   scalarOptions: {

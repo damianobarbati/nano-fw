@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { prettyJSON } from 'hono/pretty-json';
-import { registerDocsRoute } from 'nano-fw/docs';
-import { errorHandler } from 'nano-fw/http/middlewares.ts';
+import { errorHandler, routeDocs } from 'nano-fw';
+import { ERRORS } from './errors.ts';
 import { router } from './routes.ts';
 
 const app = new Hono();
@@ -18,7 +18,9 @@ app.route('/', router);
 // 2. serve ScalarUI at /docs, adding the markdowns in docsDir
 const docsAssets = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../docs-assets');
 
-registerDocsRoute(app, '/', docsAssets, {
+routeDocs(app, '/', {
+  docsAssets,
+  errors: ERRORS,
   logoUrl: '/mark.svg',
   faviconUrl: '/logo.svg',
   tagOrder: ['Users', 'Private'],

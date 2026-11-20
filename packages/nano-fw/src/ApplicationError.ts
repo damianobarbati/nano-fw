@@ -1,22 +1,22 @@
-import { ZodError } from 'zod';
+import { $ZodError } from 'zod/v4/core';
 
 export type ValidationErrorPayload = { issues?: Array<{ path: string; message: string }> };
 
-const normalizeZodError = (error: ZodError): ValidationErrorPayload => ({
+const normalizeZodError = (error: $ZodError): ValidationErrorPayload => ({
   issues: error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message })),
 });
 
-export class AppError<TCode extends string = string> extends Error {
+export class ApplicationError<TCode extends string = string> extends Error {
   public readonly status: number;
   public readonly code: TCode;
   public readonly payload?: Record<string, unknown> | ValidationErrorPayload;
 
-  constructor(status: number, code: TCode, message?: string, payload?: Record<string, unknown> | ZodError) {
+  constructor(status: number, code: TCode, message?: string, payload?: Record<string, unknown> | $ZodError) {
     super(message);
-    this.name = 'AppError';
+    this.name = 'ApplicationError';
     this.status = status;
     this.code = code;
-    this.payload = payload instanceof ZodError ? normalizeZodError(payload) : payload;
+    this.payload = payload instanceof $ZodError ? normalizeZodError(payload) : payload;
 
     Error.captureStackTrace?.(this, this.constructor);
   }

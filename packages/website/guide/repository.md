@@ -3,20 +3,18 @@
 Typed PostgreSQL operations through Knex. Table must exist and have an `id` column.
 
 ```ts
-import getConfig from 'nano-fw/database/getConfig';
-import getDatabase from 'nano-fw/database/getDatabase';
-import Repository from 'nano-fw/database/Repository';
+import { getConfig, getDatabase, Repository } from 'nano-fw/data';
 
 type User = { id: string; name: string; email: string };
 
 const config = getConfig(process.env.DATABASE_URL!);
 const database = getDatabase(config);
-const users = new Repository<User>({ database, tableName: 'users' });
+const UserRepository = new Repository<User>({ database, tableName: 'users' });
 
-const user = await users.create({ name: 'John', email: 'john@example.com' });
-const found = await users.get(user.id);
-const updated = await users.update(user.id, { name: 'Jane' });
-const removed = await users.remove(user.id);
+const user = await UserRepository.create({ name: 'John', email: 'john@example.com' });
+const found = await UserRepository.get(user.id);
+const updated = await UserRepository.update(user.id, { name: 'Jane' });
+const removed = await UserRepository.remove(user.id);
 ```
 
 Set `DATABASE_URL` to the PostgreSQL connection URL. Optional configuration: `viewName` for reads, `uniqueSortColumn` for default sorting (default: `id`).
@@ -46,7 +44,12 @@ Empty filters match all rows, including for updates and deletes. Conflict column
 ## Filters
 
 ```ts
-const matches = await users.getem({ email$ilike: '@example.com', sort: [['name', 'asc']], limit: 20, offset: 0 });
+const matches = await UserRepository.getem({
+  email$ilike: '@example.com',
+  sort: [['name', 'asc']],
+  limit: 20,
+  offset: 0,
+});
 ```
 
 Plain keys mean equality. Operators: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `like`, `ilike`, `has`. Filters combine with `AND`. Omit `limit` to return all matches.
@@ -54,9 +57,9 @@ Plain keys mean equality. Operators: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`
 ## Transactions
 
 ```ts
-await users.runInTransaction(async () => {
-  const user = await users.create({ name: 'John', email: 'john@example.com' });
-  await users.update(user.id, { name: 'Jane' });
+await UserRepository.runInTransaction(async () => {
+  const user = await UserRepository.create({ name: 'John', email: 'john@example.com' });
+  await UserRepository.update(user.id, { name: 'Jane' });
 });
 ```
 

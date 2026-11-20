@@ -1,5 +1,4 @@
-import getConfig from 'nano-fw/database/getConfig.ts';
-import getDatabase from 'nano-fw/database/getDatabase.ts';
+import { getConfig, getDatabase } from 'nano-fw/data';
 
 // credentials as defined in README.md test section when spinning the pg docker container
 const config = getConfig('postgres://user:password@localhost:5432/nano-fw');

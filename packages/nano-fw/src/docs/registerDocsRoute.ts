@@ -5,8 +5,10 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import type { ApiReferenceConfiguration } from '@scalar/hono-api-reference';
 import type { Hono } from 'hono';
 import type { OpenAPIObject } from 'openapi3-ts/oas30';
+import type { $ZodType } from 'zod/v4/core';
 import getPackage from '../getPackage.ts';
-import { generateOpenapiDoc, openapiRegistry } from './openapi.ts';
+import { generateOpenapiDoc, OpenAPIRegistry, openapiRegistry } from './openapi.ts';
+import { type ErrorCatalog, registerErrors } from './registerErrors.ts';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const { pkg_name } = getPackage();
@@ -21,7 +23,10 @@ type JsonConfiguration<Value> = Value extends (...args: never[]) => unknown
 
 export type ScalarOptions = JsonConfiguration<Partial<ApiReferenceConfiguration>>;
 
-export interface DocsRouteOptions {
+export interface RouteDocsOptions {
+  docsAssets?: string;
+  errors?: ErrorCatalog;
+  errorSchema?: $ZodType;
   /** Scalar introduction heading. Defaults to API Reference. */
   title?: string;
   /** JSON-compatible Scalar settings. Explicit values override framework defaults. Browser callbacks are not supported. */
@@ -55,12 +60,19 @@ const serializeForInlineScript = (value: unknown) => {
     .replaceAll('\u2029', '\\u2029');
 };
 
-export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: string, options: DocsRouteOptions = {}) => {
+export const routeDocs = (app: Hono, routePath: string, options: RouteDocsOptions = {}) => {
+  const docsAssets = options.docsAssets;
   const cleanRoutePath = routePath.replace(/\/$/, '');
   const specPath = `${cleanRoutePath}/openapi.json`;
   const scalarOptionsJson = serializeForInlineScript(options.scalarOptions ?? {});
 
-  const openapiSpec = generateOpenapiDoc(openapiRegistry, docsAssets, options.title ?? 'API Reference');
+  const registry = new OpenAPIRegistry();
+
+  registry.definitions = [...openapiRegistry.definitions];
+
+  if (options.errors) registerErrors(options.errors, options.errorSchema, registry);
+
+  const openapiSpec = generateOpenapiDoc(registry, docsAssets, options.title ?? 'API Reference');
   const openapiJson = JSON.stringify(openapiSpec);
 
   // serve openapi spec in-memory
@@ -92,6 +104,8 @@ export const registerDocsRoute = (app: Hono, routePath: string, docsAssets: stri
   app.get(routePath, (c) => c.html(html));
 
   // serve static doc files
+  if (!docsAssets || !fs.statSync(docsAssets, { throwIfNoEntry: false })?.isDirectory()) return;
+
   app.use(
     `/:filename{.+\\.(html|yml|png|jpg|jpeg|svg|css|js)}`,
     serveStatic({ root: docsAssets, rewriteRequestPath: (p) => p }),

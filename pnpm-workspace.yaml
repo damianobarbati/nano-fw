@@ -1,0 +1,4 @@
+packages:
+  - packages/nano-fw
+  - packages/example
+  - packages/website

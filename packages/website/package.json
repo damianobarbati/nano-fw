@@ -1,0 +1,21 @@
+{
+  "name": "website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3000 --base ./",
+    "build": "vite build --base ./"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "nano-ux": "0.0.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "vite": "^8.3.8"
+  }
+}

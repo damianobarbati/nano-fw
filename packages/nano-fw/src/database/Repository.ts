@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Knex } from 'knex';
-import { AppError } from '../AppError.ts';
+import { ApplicationError } from '../ApplicationError.ts';
 
 type RepositoryConfiguration = { database: Knex; tableName: string; viewName?: string; uniqueSortColumn?: string };
 
@@ -41,7 +41,7 @@ export type RepositoryWhere<Row> = Partial<Row> &
   StringWhere<Row> &
   ArrayWhere<Row> & { [Key in `_raw$${string}`]?: RawCondition };
 
-export type getemParamsDefault<Row = Record<string, unknown>> = RepositoryWhere<Row> & {
+export type GetemParams<Row = Record<string, unknown>> = RepositoryWhere<Row> & {
   sort?: [string, 'desc' | 'asc'][];
   limit?: number;
   offset?: number;
@@ -62,8 +62,8 @@ type getemQueryResult<ResourceRow extends { id: ID }> =
   | { type: 'raw'; sql: string; bindings: Record<string, Knex.RawBinding> | Knex.RawBinding[] };
 
 export default class Repository<
-  ResourceRow extends { id: ID } = { id: ID } & Record<string, unknown>,
-  Resource = ResourceRow,
+  Resource = { id: ID } & Record<string, unknown>,
+  ResourceRow extends { id: ID } = Resource & { id: ID },
   ResourceRowInsert = Omit<Partial<ResourceRow>, 'id' | 'created_at' | 'updated_at'>,
   ResourceRowUpdate = Partial<ResourceRowInsert>,
 > {
@@ -100,7 +100,7 @@ export default class Repository<
   async getBy(input: RepositoryWhere<ResourceRow>, plain?: true): Promise<ResourceRow>;
   async getBy(input: RepositoryWhere<ResourceRow>, plain = false): Promise<Resource | ResourceRow> {
     const result = await this.findOne(input, plain);
-    if (result === null) throw new AppError(404, 'RESOURCE_NOT_FOUND');
+    if (result === null) throw new ApplicationError(404, 'RESOURCE_NOT_FOUND');
     return result;
   }
 
@@ -160,7 +160,7 @@ export default class Repository<
 
       rows = ids.map((id) => rowMap.get(id)).filter(Boolean) as ResourceRow[];
 
-      if (rows.length !== insertedRows.length) throw new AppError(422, 'RESOURCE_NOT_FOUND_IN_VIEW'); // the view is probably dependent on a row that will be created after this one
+      if (rows.length !== insertedRows.length) throw new ApplicationError(422, 'RESOURCE_NOT_FOUND_IN_VIEW'); // the view is probably dependent on a row that will be created after this one
     }
 
     const results = await this.applyHydration(rows, plain);
@@ -189,7 +189,7 @@ export default class Repository<
     await this.police(query, 'update');
 
     const [row] = await query.update(input).returning('*');
-    if (!row) throw new AppError(404, 'RESOURCE_NOT_FOUND');
+    if (!row) throw new ApplicationError(404, 'RESOURCE_NOT_FOUND');
     return this.get(row.id, false);
   }
 
@@ -225,7 +225,7 @@ export default class Repository<
   }
 
   async lockBy(where: RepositoryWhere<ResourceRow>): Promise<boolean> {
-    if (!trxContext.getStore()) throw new AppError(500, 'TRANSACTION_REQUIRED');
+    if (!trxContext.getStore()) throw new ApplicationError(500, 'TRANSACTION_REQUIRED');
 
     const query = this.db(this.configuration.tableName).select('id');
 
@@ -286,7 +286,7 @@ export default class Repository<
       columns.length === 0 ||
       columns.some((column) => typeof column !== 'string' || column.length === 0)
     ) {
-      throw new AppError(400, 'INVALID_CONFLICT_COLUMNS');
+      throw new ApplicationError(400, 'INVALID_CONFLICT_COLUMNS');
     }
   }
 
@@ -306,7 +306,7 @@ export default class Repository<
     };
 
     for (const [key, value] of Object.entries(wheres)) {
-      if (value === undefined) throw new AppError(400, 'INVALID_WHERE');
+      if (value === undefined) throw new ApplicationError(400, 'INVALID_WHERE');
 
       if (key.startsWith('_raw$')) {
         const raw = typeof value === 'string' ? { sql: value, bindings: [] } : value;
@@ -320,7 +320,7 @@ export default class Repository<
           !('bindings' in raw) ||
           !Array.isArray(raw.bindings)
         ) {
-          throw new AppError(400, 'INVALID_WHERE');
+          throw new ApplicationError(400, 'INVALID_WHERE');
         }
 
         const { sql, bindings } = raw;
@@ -335,14 +335,14 @@ export default class Repository<
       const [column, op = 'eq', extra] = key.split('$');
 
       if (!column || extra !== undefined || !Object.hasOwn(operators, op))
-        throw new AppError(400, 'INVALID_WHERE_OPERATOR');
+        throw new ApplicationError(400, 'INVALID_WHERE_OPERATOR');
 
-      if ((op === 'in' || op === 'nin') && !Array.isArray(value)) throw new AppError(400, 'INVALID_WHERE');
+      if ((op === 'in' || op === 'nin') && !Array.isArray(value)) throw new ApplicationError(400, 'INVALID_WHERE');
       operators[op](tableName ? `${tableName}.${column}` : column, value);
     }
   }
 
-  async getemQuery(params: getemParamsDefault<ResourceRow> = {}): Promise<getemQueryResult<ResourceRow>> {
+  async getemQuery(params: GetemParams<ResourceRow> = {}): Promise<getemQueryResult<ResourceRow>> {
     const query = this.db(this.tableOrView).select('*') as Knex.QueryBuilder<ResourceRow, ResourceRow[]>;
     const { sort: _sort, limit: _limit, offset: _offset, ...wheres } = params;
 
@@ -351,12 +351,12 @@ export default class Repository<
     return { type: 'query', query };
   }
 
-  async getem(params?: getemParamsDefault<ResourceRow>, plain?: false): Promise<Resource[]>;
-  async getem(params?: getemParamsDefault<ResourceRow>, plain?: true): Promise<ResourceRow[]>;
-  async getem(params: getemParamsDefault<ResourceRow> = {}, plain = false): Promise<Resource[] | ResourceRow[]> {
+  async getem(params?: GetemParams<ResourceRow>, plain?: false): Promise<Resource[]>;
+  async getem(params?: GetemParams<ResourceRow>, plain?: true): Promise<ResourceRow[]>;
+  async getem(params: GetemParams<ResourceRow> = {}, plain = false): Promise<Resource[] | ResourceRow[]> {
     for (const value of [params.limit, params.offset]) {
       if (value !== undefined && (!Number.isSafeInteger(value) || value < 0))
-        throw new AppError(400, 'INVALID_PAGINATION');
+        throw new ApplicationError(400, 'INVALID_PAGINATION');
     }
 
     let rows: ResourceRow[];
@@ -381,7 +381,7 @@ export default class Repository<
     return this.applyHydration(rows, plain);
   }
 
-  async count(params: getemParamsDefault<ResourceRow> = {}): Promise<number> {
+  async count(params: GetemParams<ResourceRow> = {}): Promise<number> {
     const result = await this.getemQuery(params);
 
     if (result.type === 'raw') {

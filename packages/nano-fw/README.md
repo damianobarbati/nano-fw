@@ -1,72 +1,83 @@
 # nano-fw
 
-`nano-fw` (nano-sized framework) is a micro-framework powered by Hono, Zod, Knex, Vitest.  
-It's pragmatic, ESM-first and TypeScript-first.
+Validate Hono routes with Zod, generate API documentation, and query PostgreSQL.
 
-It provides:
+## Routing
 
-- type-safe request and response validation
-- automatic API docs generation with OpenAPI and Scalar from your Zod schemas
-- typed repositories
-
-Requires Node.js >=26.
-
-## Usage
-
-Install the framework and the packages used by your application:
+In a new Node.js 26 or later project, run:
 
 ```sh
-npm install nano-fw hono zod @hono/node-server
+pnpm init --init-type module
+pnpm add nano-fw hono zod @hono/node-server
 ```
 
-Use `"type": "module"` in your application's `package.json`. Set its `name` and `version`; nano-fw uses these values in the API reference.
-
-Create `src/index.ts`:
+Save this as `server.ts` and run `node server.ts`.
 
 ```ts
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
-import { AppError, errorHandler, registerDocsRoute, registerErrors, registerRoute } from 'nano-fw/docs';
+import { route, routeDocs } from 'nano-fw';
 import { z } from 'zod';
 
 const app = new Hono();
-app.onError(errorHandler);
 
-const errors = { NAME_RESERVED: new AppError(422, 'NAME_RESERVED', 'This name is reserved.') };
-
-registerErrors(errors);
-
-registerRoute(app, {
-  method: 'post',
+route(app, {
+  method: 'get',
   path: '/hello',
   requestSchema: z.object({ name: z.string().min(1) }),
   responseSchema: z.object({ message: z.string() }),
-  meta: { section: 'Hello', description: 'Say hello.' },
-  handler: ({ name }) => {
-    if (name === 'admin') throw errors.NAME_RESERVED;
-
-    const result = { message: `Hello, ${name}!` };
-    return result;
-  },
+  handler: ({ name }) => ({ message: `Hello, ${name}!` }),
 });
 
-registerDocsRoute(app, '/', './docs-assets');
-
+routeDocs(app, '/docs');
 serve({ fetch: app.fetch, port: 8080 });
 ```
 
-Start the application:
+Open `http://localhost:8080/hello?name=Ada` to see `{"message":"Hello, Ada!"}`. Open `/docs` for the generated API documentation.
 
-```sh
-mkdir -p docs-assets
-node --watch src/index.ts
+## Error handling
+
+In the same file, import `ApplicationError` and `errorHandler` from `nano-fw`. Add `app.onError(errorHandler)` after creating the app. Replace the route's handler with:
+
+```ts
+handler: ({ name }) => {
+  if (name === 'admin') throw new ApplicationError(409, 'NAME_RESERVED', 'This name is reserved.');
+  return { message: `Hello, ${name}!` };
+},
 ```
 
-API docs served at http://localhost:8080/
+Restart the server. Request `/hello?name=` for HTTP 400 with code `VALIDATION_ERROR` and the invalid field in `payload.issues`. Request `/hello?name=admin` for HTTP 409 with `{"code":"NAME_RESERVED","message":"This name is reserved."}`.
 
-## Routing
+## Database
 
-`registerRoute(app, options)` registers a Hono route, validates its input and output with Zod, and adds it to the OpenAPI registry. Register routes before starting the server.
+Use a PostgreSQL database with a `users` table, a numeric `id`, an `email` column, and a user with ID 1. Replace the connection string with yours.
+
+```ts
+import { getConfig, getDatabase, Repository } from 'nano-fw/data';
+
+type UserRow = { id: number; email: string };
+const config = getConfig('postgres://user:password@localhost:5432/nano-fw');
+const database = getDatabase(config);
+const UserRepository = new Repository<UserRow>({ database, tableName: 'users' });
+
+const user = await UserRepository.get(1);
+console.log(user.email);
+await database.destroy();
+```
+
+## Public imports
+
+| Path           | Values                                                                   | Types                                                         |
+| -------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `nano-fw`      | route, errorHandler, ApplicationError                                    | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload   |
+| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema | RouteDocsOptions, ScalarOptions, ErrorCatalog                 |
+| `nano-fw/data` | getConfig, getDatabase, Repository                                       | ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
+
+Pass `errorSchema` alongside `errors` to document a custom error payload.
+
+## Route reference
+
+`route(app, options)` registers a Hono route, validates its input and output with Zod, and adds it to the OpenAPI registry. Register routes before starting the server.
 
 | Option           | Purpose                                                                      |
 | ---------------- | ---------------------------------------------------------------------------- |
@@ -80,47 +91,43 @@ API docs served at http://localhost:8080/
 
 Input combines JSON body, query parameters, and path parameters, in that order. Later values replace earlier values with the same key. If middleware sets `auth_params` on the context, that object replaces the collected input.
 
-Query and path values arrive as strings. Use Zod coercion or transformations when your handler needs another type:
-
 ```ts
-registerRoute(app, {
-  method: 'get',
+import { route } from 'nano-fw';
+import { z } from 'zod';
+
+const ItemParams = z.object({ id: z.coerce.number().int().positive() });
+
+route(app, {
+  method: 'patch',
   path: '/items/:id',
-  meta: { section: 'Items', description: 'Return the requested item ID.' },
-  requestSchema: z.object({
-    id: z.coerce
-      .number()
-      .int()
-      .positive()
-      .meta({ param: { in: 'path' } }),
-  }),
-  responseSchema: z.object({ id: z.number() }).meta({ id: 'Item' }),
-  handler: ({ id }) => ({ id }),
+  requestSchema: ItemParams.extend({ name: z.string().min(1) }),
+  responseSchema: z.object({ id: z.number(), name: z.string() }),
+  handler: ({ id, name }) => ({ id, name }),
 });
 ```
 
-For OpenAPI, fields default to query parameters on GET routes and JSON body fields on other methods. Use `.meta({ param: { in: 'path' } })` to document path parameters. Parameter metadata also supports `query`, `header`, and `cookie`. Header and cookie metadata documents those inputs; use middleware to read their runtime values and provide them through `auth_params`.
+Fields matching a named path segment become required OpenAPI path parameters. Other fields default to query on GET and body on other methods. Explicit metadata overrides this choice. For example, `.meta({ param: { in: 'header', name: 'X-Token' } })` reads the named header.
 
 Use `.meta({ id: 'Item' })` to name a schema in the API reference.
 
 ### Errors and response documentation
 
-Define reusable `AppError` constants with an HTTP status, an error code, and a message. Pass them to `registerErrors` as an object whose keys are the documented error codes:
+Define reusable `ApplicationError` constants with an HTTP status, an error code, and a message. Pass them to the `errors` option of `routeDocs` as an object whose keys are the documented error codes:
 
 ```ts
-import { AppError, AppErrorSchema, registerErrors } from 'nano-fw/docs';
+import { ApplicationError, routeDocs } from 'nano-fw';
 
-const ITEM_NOT_FOUND = new AppError(404, 'ITEM_NOT_FOUND', 'Item not found.');
-const EMAIL_EXISTS = new AppError(409, 'EMAIL_EXISTS', 'Email already exists.');
+const ITEM_NOT_FOUND = new ApplicationError(404, 'ITEM_NOT_FOUND', 'Item not found.');
+const EMAIL_EXISTS = new ApplicationError(409, 'EMAIL_EXISTS', 'Email already exists.');
 
-registerErrors({ ITEM_NOT_FOUND, EMAIL_EXISTS });
+routeDocs(app, '/docs', { errors: { ITEM_NOT_FOUND, EMAIL_EXISTS } });
 ```
 
-Keep each catalog key equal to the corresponding `AppError` code. Register the catalog once, before `registerDocsRoute`. The API reference gets an `Errors` section with each code, HTTP status, and message, in registration order.
+Keep each catalog key equal to the corresponding `ApplicationError` code. The API reference gets an `Errors` section with each code, HTTP status, and message, in registration order.
 
-Throw a registered constant from a handler or service, such as `throw ITEM_NOT_FOUND`. With `app.onError(errorHandler)`, the response uses status `404` and a JSON body containing `code: 'ITEM_NOT_FOUND'` and `message: 'Item not found.'`. An optional fourth `AppError` argument supplies a `payload` field. Invalid request data returns `400`; invalid handler output returns `500`.
+Throw an error constant from a handler or service, such as `throw ITEM_NOT_FOUND`. With `app.onError(errorHandler)`, the response uses status `404` and a JSON body containing `code: 'ITEM_NOT_FOUND'` and `message: 'Item not found.'`. An optional fourth `ApplicationError` argument supplies a `payload` field. Invalid request data returns `400`; invalid handler output returns `500`.
 
-`registerErrors` controls the catalog documentation. Runtime errors do not need registration to be handled, and catalog registration does not add error responses to every operation. Document each operation's expected errors with `meta.responses`, as described below.
+The `errors` option controls the catalog documentation. Runtime errors do not need registration to be handled, and catalog registration does not add error responses to every operation. Document each operation's expected errors with `meta.responses`, as described below.
 
 Route metadata controls operation documentation:
 
@@ -132,19 +139,19 @@ Route metadata controls operation documentation:
 | `responses`           | Add response descriptions and schemas by HTTP status.                                 |
 | `visibility`          | Add a `public` or `private` tag. This does not enforce authentication or hide routes. |
 
-For example, add `responses: { 404: { description: 'Item not found.', schema: AppErrorSchema } }` to a route's `meta`. This documents the response; runtime status codes still come from the handler or error handler.
+For example, add `responses: { 404: { description: 'Item not found.', schema: ApplicationErrorSchema } }` to a route's `meta`. This documents the response; runtime status codes still come from the handler or error handler.
 
 ## API docs
 
 Register the docs after all routes and error catalogs, before `serve`:
 
 ```ts
-import { registerDocsRoute } from 'nano-fw/docs';
+import { routeDocs } from 'nano-fw';
 
-registerDocsRoute(app, '/', './docs-assets');
+routeDocs(app, '/');
 ```
 
-This serves the Scalar reference at `/` and the OpenAPI document at `/openapi.json`. Markdown files in `docs-assets` form the API introduction in filename order. Use names such as `01-intro.md` and `02-authentication.md` to control that order. Static assets are served at root paths, such as `/logo.svg`.
+This serves the Scalar reference at `/` and the OpenAPI document at `/openapi.json`. Set the optional `docsAssets` directory to include local files. Markdown files in `docs-assets` form the API introduction in filename order. Use names such as `01-intro.md` and `02-authentication.md` to control that order. Static assets are served at root paths, such as `/logo.svg`.
 
 The specification is generated when docs are registered. Routes registered later are not included.
 
@@ -153,7 +160,8 @@ The specification is generated when docs are registered. Routes registered later
 Pass a fourth argument to configure branding, tag order, and Scalar:
 
 ```ts
-registerDocsRoute(app, '/', './docs-assets', {
+routeDocs(app, '/', {
+  docsAssets: './docs-assets',
   logoUrl: '/logo.svg',
   faviconUrl: '/favicon.svg',
   tagOrder: ['Hello', 'Items'],
@@ -183,7 +191,7 @@ Add `logo.svg` and `favicon.svg` to `docs-assets` for this example.
 Use `transformOpenapiDocument` to change the document returned by `/openapi.json`. The callback receives the generated document and the native request, and can return a document or a promise:
 
 ```ts
-registerDocsRoute(app, '/', './docs-assets', {
+routeDocs(app, '/', {
   transformOpenapiDocument: ({ document, request }) => {
     const url = new URL(request.url);
     const customizedDocument = {
@@ -206,15 +214,13 @@ You can also replace `paths`, add security schemes under `components`, or change
 Install `knex` if your application imports its types or uses its migration CLI:
 
 ```sh
-npm install knex
+pnpm add knex
 ```
 
 Configure a database and repository:
 
 ```ts
-import getConfig from 'nano-fw/database/getConfig.ts';
-import getDatabase from 'nano-fw/database/getDatabase.ts';
-import Repository from 'nano-fw/database/Repository.ts';
+import { getConfig, getDatabase, Repository } from 'nano-fw/data';
 
 type UserRow = { id: number; name: string; email: string };
 type UserRowInsert = Pick<UserRow, 'name' | 'email'>;
@@ -297,7 +303,7 @@ For example, extend each user with roles from a `user_roles` table and an email 
 type UserRoleRow = { user_id: number; role: string };
 type User = UserRow & { roles: string[]; emailDomain: string };
 
-class UsersRepository extends Repository<UserRow, User, UserRowInsert, UserRowUpdate> {
+class UsersRepository extends Repository<User, UserRow, UserRowInsert, UserRowUpdate> {
   async hydrate(rows: UserRow[]): Promise<User[]> {
     const userIds = rows.map(({ id }) => id);
     const roleRows = await this.db<UserRoleRow>('user_roles').select('user_id', 'role').whereIn('user_id', userIds);

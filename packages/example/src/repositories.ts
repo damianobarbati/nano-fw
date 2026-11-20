@@ -1,4 +1,4 @@
-import Repository from 'nano-fw/database/Repository.ts';
+import { Repository } from 'nano-fw/data';
 import { database } from '../database/db.ts';
 import type { UserRow } from './schemas.ts';
 

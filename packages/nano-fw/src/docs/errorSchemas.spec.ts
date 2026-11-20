@@ -1,14 +1,13 @@
-import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { AppErrorSchema, ValidationErrorSchema } from './errorSchemas.ts';
-import { documentEndpoint, generateOpenapiDoc } from './openapi.ts';
+import { ApplicationErrorSchema, ValidationErrorSchema } from './errorSchemas.ts';
+import { documentEndpoint, generateOpenapiDoc, OpenAPIRegistry } from './openapi.ts';
 
 describe('errorSchemas', () => {
   it('keeps generic and validation error schemas distinct', () => {
     const registry = new OpenAPIRegistry();
 
-    documentEndpoint(registry, 'get', '/errors', z.object({}), AppErrorSchema, {
+    documentEndpoint(registry, 'get', '/errors', z.object({}), ApplicationErrorSchema, {
       responses: { 400: { description: 'Validation error', schema: ValidationErrorSchema } },
     });
 

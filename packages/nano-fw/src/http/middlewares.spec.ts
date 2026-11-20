@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { AppError } from '../AppError.ts';
+import { ApplicationError } from '../ApplicationError.ts';
 import { errorHandler, runFn, runFnSchemed } from './middlewares.ts';
 
 describe('HTTP middlewares', () => {
@@ -10,13 +10,13 @@ describe('HTTP middlewares', () => {
   });
 
   describe('errorHandler with Hono', () => {
-    it('handles AppError properly', async () => {
+    it('handles ApplicationError properly', async () => {
       const app = new Hono();
 
       app.onError(errorHandler);
 
       app.get('/test-app-error', () => {
-        throw new AppError(404, 'USER_NOT_FOUND', 'Custom not found message', { userId: 42 });
+        throw new ApplicationError(404, 'USER_NOT_FOUND', 'Custom not found message', { userId: 42 });
       });
 
       const res = await app.request('/test-app-error');
