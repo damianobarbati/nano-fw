@@ -70,7 +70,9 @@
       interpolate-size: allow-keywords;
       block-size: 0;
       overflow: clip;
-      transition: block-size 180ms ease, content-visibility 180ms allow-discrete;
+      transition:
+        block-size 180ms ease,
+        content-visibility 180ms allow-discrete;
     }
     .nav-group[open]::details-content {
       block-size: auto;

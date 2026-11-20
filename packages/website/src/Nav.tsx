@@ -9,11 +9,13 @@ const guideLinks = [
   { id: 'error-handling', label: 'Error handling' },
   { id: 'database', label: 'Database' },
 ];
+
 const referenceLinks = [
   { id: 'api-reference', label: 'Overview' },
   { id: 'api-http', label: 'nano-fw' },
   { id: 'api-data', label: 'nano-fw/data' },
 ];
+
 const groups = [
   { title: 'Guide', links: guideLinks },
   { title: 'API Reference', links: referenceLinks },
@@ -23,7 +25,10 @@ export const Nav = () => {
   const [activeId, setActiveId] = React.useState('');
 
   React.useEffect(() => {
-    const headings = groups.flatMap(({ links }) => links).map(({ id }) => document.getElementById(id)).filter((heading) => heading !== null);
+    const headings = groups
+      .flatMap(({ links }) => links)
+      .map(({ id }) => document.getElementById(id))
+      .filter((heading) => heading !== null);
 
     const updateSection = () => {
       const heading = headings.findLast((element) => element.getBoundingClientRect().top <= 96);
