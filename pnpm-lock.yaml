@@ -21,8 +21,8 @@ importers:
         specifier: ^1.93.0
         version: 1.94.0
       oxlint-better:
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.0.6
+        version: 1.0.6
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -33,11 +33,11 @@ importers:
   packages/example:
     dependencies:
       '@hono/node-server':
-        specifier: ^2.1.8
-        version: 2.1.9(hono@4.13.19)
+        specifier: ^2.1.11
+        version: 2.1.11(hono@4.13.20)
       hono:
-        specifier: ^4.13.18
-        version: 4.13.19
+        specifier: ^4.13.20
+        version: 4.13.20
       knex:
         specifier: 3.3.0
         version: 3.3.0(pg@8.23.1)
@@ -55,11 +55,11 @@ importers:
   packages/nano-fw:
     dependencies:
       '@hono/node-server':
-        specifier: ^2.1.8
-        version: 2.1.9(hono@4.13.19)
+        specifier: ^2.1.11
+        version: 2.1.11(hono@4.13.20)
       '@scalar/hono-api-reference':
-        specifier: ^0.12.20
-        version: 0.12.22(hono@4.13.19)
+        specifier: ^0.12.23
+        version: 0.12.23(hono@4.13.20)
       debug:
         specifier: ^4.4.3
         version: 4.4.3
@@ -67,8 +67,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       hono:
-        specifier: ^4.13.18
-        version: 4.13.19
+        specifier: ^4.13.20
+        version: 4.13.20
       knex:
         specifier: 3.3.0
         version: 3.3.0(pg@8.23.1)
@@ -91,8 +91,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       nano-ux:
-        specifier: 0.0.4
-        version: 0.0.4(clsx@2.1.1)(react-dom@19.3.1(react@19.3.1))(react-hook-form@7.92.0(@types/react@19.3.0)(react@19.3.1))(react@19.3.1)(swr@2.5.1(react@19.3.1))(tailwind-merge@3.7.1)
+        specifier: 0.0.6
+        version: 0.0.6(clsx@2.1.1)(react-dom@19.3.1(react@19.3.1))(react-hook-form@7.92.0(@types/react@19.3.0)(react@19.3.1))(react@19.3.1)(swr@2.5.1(react@19.3.1))(tailwind-merge@3.7.1)
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -196,8 +196,8 @@ packages:
   '@fontsource-variable/inter@5.3.0':
     resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
 
-  '@hono/node-server@2.1.9':
-    resolution: {integrity: sha512-Sk4NQd3GFY0WZWCzndwFMPwJhtD0y9qjsQ+pjID0/03nK9pxyBCUoUHCho8QYBLBVhi0ssL8UkNPHqbgSOFPIQ==}
+  '@hono/node-server@2.1.11':
+    resolution: {integrity: sha512-KzKz9vl4vvr1vgLHamj+g5uonbrj5NwAdO3yzOS6cd2HjALVeOgTgeZOyAzNxejbkfOOPIcvuf/Tg8l1pEFLog==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: ^4 || ^5.0.0-0
@@ -452,26 +452,26 @@ packages:
   '@rolldown/pluginutils@1.1.1':
     resolution: {integrity: sha512-glFIJDvLNDtJhT9qrMFWLPbvS+skxgt4L0K8Ei2YtnhPysAJnsI7nyxSJxKj4ADeKX0OLjC4ntRkwpLOoS3rwA==}
 
-  '@scalar/client-side-rendering@0.4.21':
-    resolution: {integrity: sha512-zjRtLjOysw6C8tFOxvwR5d5tnjJh8Ga46SAf3fhioHicDUB3c9dx6YbxKWE03b3VvDdhDFfkryHbXUfrMGeCQg==}
+  '@scalar/client-side-rendering@0.4.22':
+    resolution: {integrity: sha512-7neipw+9bwNzHtEChMlFJkTFCKFbRg8W88MsWJBYH+wHhO6za/DzNu+sPdz0d+v85EMBKi/akoXgsZdya8vF7w==}
     engines: {node: '>=22'}
 
-  '@scalar/helpers@0.18.1':
-    resolution: {integrity: sha512-5/FsnE/4bCbr+h0OOgT1Zlnl4G7MKgPsZlzDN4KiBjpVCCZNHn7Px9gLOqtQSfsSqM/JFwUW+voZNVTODiL2BA==}
+  '@scalar/helpers@0.19.0':
+    resolution: {integrity: sha512-h2yJ2QD5Y41gKszVymILKVMCWfK2vpdsro3+rp8doqWWBN09kkWHmMXTJl9EyP/jgswxJhrnjECCAHqeAeSdvg==}
     engines: {node: '>=22'}
 
-  '@scalar/hono-api-reference@0.12.22':
-    resolution: {integrity: sha512-b6BnkoaRRzWhQ3y9ZNJdGcU6HRH1Cg3bIEzTsO+EOFuwwogX28SeB0jqD9+RL2xotBcmloYh87GDZKuHjtRiFQ==}
+  '@scalar/hono-api-reference@0.12.23':
+    resolution: {integrity: sha512-fKbOBb9Q1uRw5P56EBgAD/32CVB3RsIylOqizC8Nztjc+WPsDDnHJZtg1p2iT1yPbshMhd3btXeS71tfLc3Hrg==}
     engines: {node: '>=22'}
     peerDependencies:
       hono: ^4.12.5
 
-  '@scalar/schemas@0.18.1':
-    resolution: {integrity: sha512-w6F/6o2NIOxYMJfhG/KRUFgEHVcQ8zO3PzXWYkWMjJpTOhgbUIfWwDm3lgM9+ru58bE9P5eIVaGY8hiNS/idpg==}
+  '@scalar/schemas@0.19.0':
+    resolution: {integrity: sha512-IZFZMj4HFSDtbZtNSFB896N2GpE5rSpYalXTJowXwX1VD9gyimD7rLBkYLYu+KgK1TF3xTeyyzW6Nn8xpjiuJw==}
     engines: {node: '>=22'}
 
-  '@scalar/types@0.30.0':
-    resolution: {integrity: sha512-RK0fGYk+vR0ck424RmLMDdwVh8NzPkUHeKIUX6GroxlhG2kygRDdC9pC3zx6AhYSAVhmS3uTsbnspUV1rYTbyw==}
+  '@scalar/types@0.31.0':
+    resolution: {integrity: sha512-PFNIaZymTaisk0OlTEsDzGBX/ilmR43IobsEGKbFReKWCdEpAKN4lnjZ/GuRD9B3iKMHDM52erP/kXkhrihszA==}
     engines: {node: '>=22'}
 
   '@scalar/validation@0.6.9':
@@ -769,8 +769,8 @@ packages:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
 
-  hono@4.13.19:
-    resolution: {integrity: sha512-KmXvQAXwcAHV+muzbIwoJ23niEB5nMoDVr9WcRkU8mvjUECm/1+7v4Jgp7P7a+H6MLFrh+vXrGonGrGS+RQfkA==}
+  hono@4.13.20:
+    resolution: {integrity: sha512-xo6gecEJQ+CjTtOUUbcLHE8CdRKMeF4qITe+DT+OhFnSUmZR/ZBa9XavAfiGh4HlukmlaHFdaK4dz5tkTYFNmA==}
     engines: {node: '>=16.9.0'}
 
   interpret@2.2.0:
@@ -905,9 +905,9 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  nano-ux@0.0.4:
-    resolution: {integrity: sha512-dDXCJe/cZp22kxRDqVnD7PojrCSK1J5iQoae2JMgGyu5Ocbsqa7mao1aDp3hfk7xNhgF/dLkjmPWNPvvkY5EXA==}
-    engines: {node: '24'}
+  nano-ux@0.0.6:
+    resolution: {integrity: sha512-S+LklRb4LQ1EaAJ/0IKTNpHTHd3/3Cvb1RsBlYAvhuu0TKlfX/+XadbpNq2i+odMsukmkaSAHxrti1qScHOpDA==}
+    engines: {node: '>=24.0.0'}
     peerDependencies:
       react: ^19.3.1
       react-dom: ^19.3.1
@@ -931,8 +931,8 @@ packages:
   openapi3-ts@4.6.2:
     resolution: {integrity: sha512-gyyil3DweqhXiEhTqtAs9wwRLfWHmetwhI4kmM5Rn0d6gtmK863Ki7qqbQnp9+Wwlqoe3B1LFWj7kMp5ctE4rQ==}
 
-  oxlint-better@1.0.3:
-    resolution: {integrity: sha512-hTOmzWX5cL916pR8tR7RQJFSBjBt3tKvVmmVBL6A0WbXAadfBERYKPaIQugbM6w2RGo0wcKep/1i6TbYk3ysfg==}
+  oxlint-better@1.0.6:
+    resolution: {integrity: sha512-n38v0X48nfl4Q/WyROZjefBGrpxR3URnvNxJ9ekCZLQ0HIXeUnwiUs72FFdt4ZA7Uj0C174Uh05HbcrrLhM1VA==}
     engines: {node: '>=24.12.0'}
 
   oxlint@1.94.0:
@@ -1319,9 +1319,9 @@ snapshots:
 
   '@fontsource-variable/inter@5.3.0': {}
 
-  '@hono/node-server@2.1.9(hono@4.13.19)':
+  '@hono/node-server@2.1.11(hono@4.13.20)':
     dependencies:
-      hono: 4.13.19
+      hono: 4.13.20
 
   '@jridgewell/resolve-uri@3.1.3': {}
 
@@ -1454,29 +1454,29 @@ snapshots:
 
   '@rolldown/pluginutils@1.1.1': {}
 
-  '@scalar/client-side-rendering@0.4.21':
+  '@scalar/client-side-rendering@0.4.22':
     dependencies:
-      '@scalar/helpers': 0.18.1
-      '@scalar/schemas': 0.18.1
-      '@scalar/types': 0.30.0
+      '@scalar/helpers': 0.19.0
+      '@scalar/schemas': 0.19.0
+      '@scalar/types': 0.31.0
       '@scalar/validation': 0.6.9
 
-  '@scalar/helpers@0.18.1': {}
+  '@scalar/helpers@0.19.0': {}
 
-  '@scalar/hono-api-reference@0.12.22(hono@4.13.19)':
+  '@scalar/hono-api-reference@0.12.23(hono@4.13.20)':
     dependencies:
-      '@scalar/client-side-rendering': 0.4.21
-      hono: 4.13.19
+      '@scalar/client-side-rendering': 0.4.22
+      hono: 4.13.20
 
-  '@scalar/schemas@0.18.1':
+  '@scalar/schemas@0.19.0':
     dependencies:
-      '@scalar/helpers': 0.18.1
-      '@scalar/types': 0.30.0
+      '@scalar/helpers': 0.19.0
+      '@scalar/types': 0.31.0
       '@scalar/validation': 0.6.9
 
-  '@scalar/types@0.30.0':
+  '@scalar/types@0.31.0':
     dependencies:
-      '@scalar/helpers': 0.18.1
+      '@scalar/helpers': 0.19.0
       nanoid: 5.1.16
       type-fest: 5.10.0
       zod: 4.6.7
@@ -1677,7 +1677,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.13.19: {}
+  hono@4.13.20: {}
 
   interpret@2.2.0: {}
 
@@ -1769,7 +1769,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  nano-ux@0.0.4(clsx@2.1.1)(react-dom@19.3.1(react@19.3.1))(react-hook-form@7.92.0(@types/react@19.3.0)(react@19.3.1))(react@19.3.1)(swr@2.5.1(react@19.3.1))(tailwind-merge@3.7.1):
+  nano-ux@0.0.6(clsx@2.1.1)(react-dom@19.3.1(react@19.3.1))(react-hook-form@7.92.0(@types/react@19.3.0)(react@19.3.1))(react@19.3.1)(swr@2.5.1(react@19.3.1))(tailwind-merge@3.7.1):
     dependencies:
       '@tanstack/react-table': 9.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       clsx-tw: 1.0.9(clsx@2.1.1)(tailwind-merge@3.7.1)
@@ -1794,7 +1794,7 @@ snapshots:
     dependencies:
       yaml: 2.9.1
 
-  oxlint-better@1.0.3:
+  oxlint-better@1.0.6:
     dependencies:
       '@oxlint/plugins': 1.94.0
 

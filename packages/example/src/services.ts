@@ -27,7 +27,6 @@ export class AuthService {
 
     const password_hash = createHash('sha256').update(password).digest('hex');
     if (user.password_hash !== password_hash) throw AUTH_INVALID_CREDENTIALS;
-
     return user;
   }
 }
