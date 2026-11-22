@@ -63,6 +63,21 @@ describe('routeDocs', () => {
     expect((await app.request('/missing.svg')).status).toEqual(404);
   });
 
+  it.each([
+    { title: 'Partner API', htmlTitle: 'Partner API' },
+    { title: 'R&D <Partner>', htmlTitle: 'R&amp;D &lt;Partner&gt;' },
+  ])('uses $title for the documentation page and OpenAPI title', async ({ title, htmlTitle }) => {
+    const app = new Hono();
+
+    routeDocs(app, '/docs', { title });
+
+    const html = await (await app.request('/docs')).text();
+    const spec = await (await app.request('/docs/openapi.json')).json();
+
+    expect(html).toContain(`<title>${htmlTitle}</title>`);
+    expect(spec.info.title).toEqual(title);
+  });
+
   it('passes Scalar settings through and overrides framework defaults', async () => {
     const app = new Hono();
 
@@ -141,6 +156,7 @@ describe('routeDocs', () => {
     expect(htmlRes.headers.get('content-type')).toContain('text/html');
     expect(getScalarConfig(html).url).toEqual(specPath);
     expect(getScalarConfig(html).customCss).not.toContain('.section-header-wrapper');
+    expect(html).toContain('<title>API Reference</title>');
     expect(html).not.toContain('XYZ');
   });
 

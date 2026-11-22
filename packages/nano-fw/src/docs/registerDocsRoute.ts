@@ -27,7 +27,7 @@ export interface RouteDocsOptions {
   docsAssets?: string;
   errors?: ErrorCatalog;
   errorSchema?: $ZodType;
-  /** Scalar introduction heading. Defaults to API Reference. */
+  /** Browser tab title and Scalar introduction heading. Defaults to API Reference. */
   title?: string;
   /** JSON-compatible Scalar settings. Explicit values override framework defaults. Browser callbacks are not supported. */
   scalarOptions?: ScalarOptions;
@@ -101,6 +101,11 @@ export const routeDocs = (app: Hono, routePath: string, options: RouteDocsOption
   );
 
   html = html.replace('__SCALAR_OPTIONS__', () => scalarOptionsJson);
+
+  html = html.replace('__PAGE_TITLE__', () =>
+    openapiSpec.info.title.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
+  );
+
   app.get(routePath, (c) => c.html(html));
 
   // serve static doc files
