@@ -1,5 +1,5 @@
 {
-  "name": "example",
+  "name": "demo",
   "version": "2.0.7",
   "private": true,
   "type": "module",
@@ -7,7 +7,6 @@
     "node": ">=26.0"
   },
   "scripts": {
-    "test": "echo ''",
     "dev": "node --watch --watch-path=. --watch-path=../nano-fw/dist src/index.ts",
     "db:migrate": "knex migrate:latest --knexfile=database/db.ts",
     "db:seed": "knex seed:run --knexfile=database/db.ts"

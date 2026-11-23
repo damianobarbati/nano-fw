@@ -13,7 +13,7 @@ Steps are:
 You should end up in a structure like this:
 
 ```text
-packages/example/
+packages/demo/
 ├── database/
 │   ├── db.ts
 │   ├── schema.sql
@@ -50,7 +50,7 @@ Run migrations:
 
 ```sh
 pnpm run build
-pnpm -F example run db:migrate
+pnpm -F demo run db:migrate
 ```
 
 Start the library compiler watcher in one terminal:
@@ -62,7 +62,7 @@ pnpm -F nano-fw run dev
 Start the server in another terminal:
 
 ```sh
-pnpm -F example run dev
+pnpm -F demo run dev
 ```
 
 Library TypeScript changes compile automatically and restart the server. Changes to the library HTML or migration stub require `pnpm run build`.

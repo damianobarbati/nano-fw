@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { AUTH_EMAIL_NOT_FOUND, AUTH_INVALID_CREDENTIALS, USER_EMAIL_EXISTS } from './errors.ts';
+import { AUTH_INVALID_CREDENTIALS, USER_EMAIL_EXISTS } from './errors.ts';
 import { UserRepository } from './repositories.ts';
 import type { AuthLoginRequest, UserCreateRequest, UserListRequest, UserRow } from './schemas.ts';
 
@@ -23,10 +23,8 @@ export class UserService {
 export class AuthService {
   static async login({ email, password }: AuthLoginRequest): Promise<UserRow> {
     const user = await UserRepository.findBy({ email });
-    if (!user) throw AUTH_EMAIL_NOT_FOUND({ email });
-
     const password_hash = createHash('sha256').update(password).digest('hex');
-    if (user.password_hash !== password_hash) throw AUTH_INVALID_CREDENTIALS;
+    if (user === null || user.password_hash !== password_hash) throw AUTH_INVALID_CREDENTIALS;
     return user;
   }
 }

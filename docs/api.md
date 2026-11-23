@@ -125,7 +125,16 @@ routeDocs(app, '/docs', { errors: { ITEM_NOT_FOUND, EMAIL_EXISTS } });
 
 Keep each catalog key equal to the corresponding `ApplicationError` code. The API reference gets an `Errors` section with each code, HTTP status, and message, in registration order.
 
-Throw an error constant from a handler or service, such as `throw ITEM_NOT_FOUND`. With `app.onError(errorHandler)`, the response uses status `404` and a JSON body containing `code: 'ITEM_NOT_FOUND'` and `message: 'Item not found.'`. An optional fourth `ApplicationError` argument supplies a `payload` field. Invalid request data returns `400`; invalid handler output returns `500`.
+Throw an error constant from a handler or service, such as `throw ITEM_NOT_FOUND`. With `app.onError(errorHandler)`, the response uses status `404` and a JSON body containing `code: 'ITEM_NOT_FOUND'` and `message: 'Item not found.'`. An optional fourth `ApplicationError` argument supplies a `payload` field. Requests that fail schema validation return `400`. Invalid handler output returns `500`.
+
+For authentication and account routes, choose the `ApplicationError` status based on the reason the operation failed. Clients should branch on the status and stable `code` field. Return the same credential error for an unknown account and an incorrect password.
+
+| Status | Use                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------ |
+| `401`  | Missing or invalid authentication, including an invalid second factor at login.            |
+| `403`  | An authenticated caller lacks permission.                                                  |
+| `409`  | A conflict with current state, such as an email address already in use.                    |
+| `422`  | Schema-valid input violates a domain constraint, such as a password confirmation mismatch. |
 
 The `errors` option controls the catalog documentation. Runtime errors do not need registration to be handled, and catalog registration does not add error responses to every operation. Document each operation's expected errors with `meta.responses`, as described below.
 

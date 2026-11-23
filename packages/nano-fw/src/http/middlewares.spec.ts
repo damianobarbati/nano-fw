@@ -26,6 +26,28 @@ describe('HTTP middlewares', () => {
       expect(data).toEqual({ code: 'USER_NOT_FOUND', message: 'Custom not found message', payload: { userId: 42 } });
     });
 
+    it.each([
+      [401, 'AUTH_INVALID_CREDENTIALS', 'Invalid email or password.'],
+      [401, 'INVALID_2FA_CODE', 'Invalid verification code.'],
+      [403, 'FORBIDDEN', 'You do not have permission.'],
+      [409, 'USER_EMAIL_EXISTS', 'Email address already in use.'],
+      [409, 'CODE_NOT_REQUIRED', 'A verification code is not required.'],
+      [422, 'PASSWORD_CONFIRMATION_MISMATCH', 'The passwords do not match.'],
+    ] as const)('serializes auth error %i %s', async (status, code, message) => {
+      const app = new Hono();
+      const error = new ApplicationError(status, code, message);
+
+      app.onError(errorHandler);
+
+      app.post('/auth/test', () => {
+        throw error;
+      });
+
+      const response = await app.request('/auth/test', { method: 'POST' });
+      expect(response.status).toEqual(status);
+      expect(await response.json()).toEqual({ code, message });
+    });
+
     it('handles request ZodError with 400 Bad Request and issues payload', async () => {
       const app = new Hono();
 

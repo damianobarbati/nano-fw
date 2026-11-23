@@ -1,3 +1,4 @@
+import './setup.ts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import Repository from '../src/database/Repository.ts';
 import { database } from './database.ts';

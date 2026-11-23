@@ -1,4 +1,5 @@
 **/dist/
+/packages/nano-fw/README.md
 **/node_modules/
 coverage/
 .idea/

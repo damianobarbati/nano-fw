@@ -11,7 +11,13 @@ It provides:
 
 Requires Node.js >=26.
 
-## First route
+## Usage
+
+Use a Node.js ESM project with a name and version in `package.json`.
+
+```sh
+npm install nano-fw hono @hono/node-server zod
+```
 
 ```ts
 import { serve } from '@hono/node-server';
@@ -34,7 +40,7 @@ serve({ fetch: app.fetch, port: 8080 });
 
 `curl http://localhost:8080/hello/Ada` returns `{"message":"Hello, Ada!"}`.
 
-See the [installation guide](packages/nano-fw/README.md) and [database example](packages/example/README.md).
+See the [API reference](https://github.com/damianobarbati/nano-fw/blob/main/docs/api.md) and [database example](https://github.com/damianobarbati/nano-fw/tree/main/packages/demo).
 
 ## Development
 
@@ -46,10 +52,9 @@ Requirements:
 Setup:
 
 ```sh
-fnm install
+fnm install --use
 npm install -g corepack
 corepack enable
-corepack install
 pnpm install
 pnpm run build
 ```
@@ -72,14 +77,14 @@ Run example:
 
 ```sh
 pnpm dev
-pnpm -F example run db:migrate
-pnpm -F example run db:seed
-pnpm -F example run dev
+pnpm -F demo run db:migrate
+pnpm -F demo run db:seed
+pnpm -F demo run dev
 ```
 
 Example running at http://localhost:8080
 
-## Releasing
+## Release
 
 ```sh
 pnpm run release

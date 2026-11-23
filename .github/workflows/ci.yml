@@ -1,52 +1,114 @@
 name: CI
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   push:
-    branches: ["main"]
-    tags: ["*"]
+    branches: [main]
+    tags: [v*]
   pull_request:
-    branches: ["main"]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
-  test-and-publish:
+  verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - name: Check out repository
+        uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
-          node-version-file: "package.json"
-          cache: "pnpm"
-          registry-url: https://registry.npmjs.org/
+          node-version-file: package.json
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build
+        run: pnpm build
 
       - name: Lint
-        run: |
-          pnpm run lint
-          git diff --exit-code
+        run: pnpm lint
 
-      - name: Start testing environment
+      - name: Start PostgreSQL
         run: |
-          docker run -q -d --name nano-fw -p 5432:5432 -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=nano-fw postgres:19-alpine
-          timeout 10 bash -c -- "while ! docker run -q --rm --network=host -i postgres:19-alpine pg_isready --quiet --timeout=1 -d postgres://user:password@localhost:5432/nano-fw; do sleep 1; done"
+          docker run --detach --name nano-fw-test --publish 5432:5432 \
+            --env POSTGRES_USER=user --env POSTGRES_PASSWORD=password \
+            --env POSTGRES_DB=nano-fw postgres:19-alpine
+          timeout 30s bash -c 'until docker exec nano-fw-test pg_isready --quiet --host 127.0.0.1 --username user --dbname nano-fw; do sleep 1; done'
 
       - name: Test
-        run: pnpm run test
+        run: pnpm test
 
-      - name: Publish
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      - name: Upload website
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: packages/website/dist
+
+  pages:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy website
+        id: deploy
+        uses: actions/deploy-pages@v5
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: pnpm
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check release version
+        env:
+          PACKAGE_MANIFEST: packages/nano-fw/package.json
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+
+          const manifest = JSON.parse(readFileSync(process.env.PACKAGE_MANIFEST, 'utf8'));
+          const expectedTag = `v${manifest.version}`;
+          if (process.env.GITHUB_REF_NAME !== expectedTag) {
+            throw new Error(`Expected tag ${expectedTag} for ${manifest.name}`);
+          }
+          NODE
+
+      - name: Publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm run release
+        run: pnpm release

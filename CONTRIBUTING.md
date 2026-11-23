@@ -58,9 +58,9 @@
 - IF type is shared across layers THEN use Zod type inference.
 - IF type is layer-internal THEN use dedicated type.
 - ALWAYS prefer arrow functions over classes.
-- ONLY use classes to maintain internal state.
+- Use classes for internal state or static methods.
 - ALWAYS prefer named exports.
-- ONLY use default exports for app entrypoint, singletons, and database connection.
+- Allow default exports for app entry points, singletons, database connections, and resource controller and service classes.
 - ALWAYS prefer pure functions.
 - ALWAYS make functions do one thing.
 - IF function exceeds about 40 lines THEN consider splitting it.
@@ -86,7 +86,7 @@
 
 - ALWAYS enforce `controller` > `service` > `repository` responsibility separation.
 - ALWAYS flow data user > controller > service > repository > data layer.
-- Backend: ALWAYS return raw data.
+- Backend: ALWAYS return raw data. Expose monetary amounts as JSON numbers.
 - Frontend: ALWAYS format, localize, and present received raw data.
 - ALWAYS route every user or agent state retrieval or change through controller.
 - Controller: ALWAYS parse client input.
@@ -107,13 +107,13 @@
 - Repository: ALWAYS expose retrieval methods.
 - Repository: ALWAYS expose persistence methods.
 - ALWAYS use `console.log` and `console.error` appropriately.
-- Controller, service, repository: ALWAYS throw errors as `new <HttpError>(<code>, <message>)`.
-- ALWAYS define thrown errors as constants.
+- Use `ApplicationError` from `nano-fw` for HTTP errors. Define reusable errors with `new ApplicationError(status, code, message)` and supply a fourth argument when a payload is needed.
+- Return `{ code, message, payload? }`. Use `400` for malformed or schema-invalid requests, `401` for missing or invalid authentication, `403` for authenticated callers without permission, `409` for state conflicts, and `422` for schema-valid requests that violate domain constraints.
 - ALWAYS validate request input and response output.
 - ALWAYS provide API documentation for accepted inputs and expected outputs.
 - ALWAYS provide health-check endpoint returning API state.
 - NEVER repeat resource name in resource method name.
-- ALWAYS use custom `ResourceRepository` extending `Repository` from `nano-fw` for datasource access.
+- For application datasource access, import `Repository` from `nano-fw/data` and export a configured singleton for each resource.
 - BEFORE adding a custom repository method, ALWAYS inspect inherited `Repository` methods.
 - Repository: NEVER wrap existing CRUD methods in business-operation methods.
 - Custom repository methods: ONLY implement datasource operations unavailable through inherited methods.
@@ -124,16 +124,14 @@
 - Service methods: ALWAYS be `static async`.
 - Services: NEVER access database clients directly.
 - Services: ALWAYS use repositories.
-- `packages/api/src/**/*Repository.ts`: ALWAYS extend `Repository` from `nano-fw/database/Repository.ts`.
-- `packages/api/src/**/*Repository.ts`: ALWAYS export configured singleton.
 - Repositories: ALWAYS use Postgres.
 - NEVER use `pg` outside repositories.
 - ALWAYS treat Postgres timestamp columns as ISO8601.
 - Backend entrypoint: ALWAYS use `index.ts`.
 - HTTP route definitions: ALWAYS use `router.ts`.
 - CLI command definitions: ALWAYS use `cli.ts`.
-- Resource controller: ALWAYS use `<resource>/<Resource>Controller.ts` with default-exported class and static methods.
-- Resource service: ALWAYS use `<resource>/<Resource>Service.ts` with default-exported class and static methods.
+- A resource controller is optional. When present, use `<resource>/<Resource>Controller.ts` with a default-exported class containing only static methods.
+- Use `<resource>/<Resource>Service.ts` with a default-exported class containing only static async methods.
 - Resource repository: ALWAYS use `<resource>/<Resource>Repository.ts` with default-exported object.
 
 ## Frontend
@@ -156,7 +154,8 @@
 - NEVER use inline `style` unless dynamically computed.
 - NEVER use CSS-in-JS.
 - Component: ALWAYS accept `className` prop.
-- Component root: ALWAYS receive `className` as first prop.
+- Component root: ALWAYS receive the `className` prop.
+- Order JSX attributes `key`, `id`, `className`, then all other props. Skip attributes that are absent.
 - ALWAYS use `cx` from `clsx-tw` to combine class names.
 - NEVER use string interpolation to combine class names.
 - ALWAYS dedupe Tailwind classes.
@@ -222,7 +221,8 @@
 - ALWAYS make test input visible without hidden setup search.
 - NEVER modify seeded data in tests.
 - `describe` or `it`: ALWAYS prepare required data when seeds do not provide it.
-- Database tests: ALWAYS begin a transaction in `beforeEach` and roll it back in `afterEach`.
+- For unit and integration tests whose database operations can share one transaction, use Vitest `it.aroundEach`. Begin the transaction before `runTest`, run the test in its transaction context, and roll back in `finally`.
+- For browser E2E and tests that require commits or independent connections, use dedicated test data and clean it up explicitly. Tests without database access need no transaction.
 - ALWAYS avoid mocking when possible and use real calls to persistence layers.
 - ONLY mock email sending.
 - NEVER write redundant expectations.
@@ -256,9 +256,9 @@
 - Migration files: NEVER use Knex query builder.
 - Migration files: ONLY use `database.raw` with plain raw SQL statements.
 - Migration files: ALWAYS leave `down` handler empty.
-- ID columns: ALWAYS define as `uuidv7`.
+- Use PostgreSQL `uuid` for new identifiers and generate new primary IDs as UUIDv7. Preserve existing UUID versions and integer IDs. Do not introduce `bigserial` or `bigint` identifiers.
 - Date columns: ALWAYS define as `timestamptz(0)`.
-- Numeric columns: ALWAYS define as `numeric`.
+- Store monetary amounts as `numeric(12,2)`. Use `numeric` for other numeric columns, subject to the identifier rule above.
 - NEVER use `char` unless strictly needed.
 - Transactions and table or row locks: ALWAYS minimize use and retain only when required for data correctness.
 - Transactions and locks: ALWAYS limit scope to minimum code needed to execute queries.

@@ -1,4 +1,4 @@
 packages:
-  - packages/nano-fw
-  - packages/example
-  - packages/website
+  - packages/*
+minimumReleaseAgeExclude:
+  - nano-ux@0.0.6
