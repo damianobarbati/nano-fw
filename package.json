@@ -16,7 +16,8 @@
     "test": "pnpm -r run test",
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm --filter nano-fw run build && pnpm --filter website run build",
-    "release": "pnpm --filter nano-fw publish --no-git-checks"
+    "release": "pnpm --filter nano-fw publish --no-git-checks",
+    "bump": "pnpm -r --include-workspace-root version"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.9",

@@ -41,8 +41,7 @@
     "test": "vitest run",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/docs/docs.html dist/docs/",
     "dev": "tsc -p tsconfig.build.json --watch",
-    "prepack": "pnpm run build && cp ../../README.md README.md",
-    "bump": "pnpm -r --include-workspace-root version"
+    "prepack": "pnpm run build && cp ../../README.md README.md"
   },
   "homepage": "https://damianobarbati.github.io/nano-fw/"
 }
