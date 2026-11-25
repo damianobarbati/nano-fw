@@ -53,6 +53,17 @@ pnpm run build
 pnpm -F demo run db:migrate
 ```
 
+From a consumer package, pass the module that exports the named Knex instance `database`.
+
+```sh
+pnpm nano-fw migrate ./database/db.ts
+pnpm nano-fw seed ./database/db.ts
+```
+
+The commands read TypeScript files in filename order from `migrations/` or `seeds/` beside the database module. Each file exports exactly one function. Named and default exports both work. The runner passes the transaction to each migration. Each run applies all pending files in one transaction and records them in `knex_migrations`. A PostgreSQL advisory lock makes concurrent runs on the same schema wait for their turn. Finish any runs from the Knex CLI or older nano-fw versions before switching all deployments to this runner.
+
+Each seed receives the database instance. Every seed runs on each invocation. A seed error stops the run and earlier seeds can remain committed.
+
 Start the library compiler watcher in one terminal:
 
 ```sh
@@ -65,7 +76,7 @@ Start the server in another terminal:
 pnpm -F demo run dev
 ```
 
-Library TypeScript changes compile automatically and restart the server. Changes to the library HTML or migration stub require `pnpm run build`.
+Library TypeScript changes compile automatically and restart the server. Changes to the library HTML require `pnpm run build`.
 
 API server and docs at: http://localhost:8080
 

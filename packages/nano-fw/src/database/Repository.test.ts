@@ -1,7 +1,6 @@
-import '../../test/setup.ts';
 import type { Knex } from 'knex';
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
-import { database } from '../../test/database.ts';
+import { database } from '../../vitest.setup.ts';
 import Repository, { type RepositoryWhere, trxContext } from './Repository.ts';
 
 type UserRow = { id: number; name: string };

@@ -3,12 +3,11 @@
 Typed PostgreSQL operations through Knex. Table must exist and have an `id` column.
 
 ```ts
-import { getConfig, getDatabase, Repository } from 'nano-fw/data';
+import { createDatabase, Repository } from 'nano-fw/data';
 
 type User = { id: string; name: string; email: string };
 
-const config = getConfig(process.env.DATABASE_URL!);
-const database = getDatabase(config);
+const database = createDatabase({ connectionString: process.env.DATABASE_URL! });
 const UserRepository = new Repository<User>({ database, tableName: 'users' });
 
 const user = await UserRepository.create({ name: 'John', email: 'john@example.com' });

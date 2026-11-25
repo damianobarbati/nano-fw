@@ -53,11 +53,10 @@ Restart the server. Request `/hello?name=` for HTTP 400 with code `VALIDATION_ER
 Use a PostgreSQL database with a `users` table, a numeric `id`, an `email` column, and a user with ID 1. Replace the connection string with yours.
 
 ```ts
-import { getConfig, getDatabase, Repository } from 'nano-fw/data';
+import { createDatabase, Repository } from 'nano-fw/data';
 
 type UserRow = { id: number; email: string };
-const config = getConfig('postgres://user:password@localhost:5432/nano-fw');
-const database = getDatabase(config);
+const database = createDatabase({ connectionString: 'postgres://user:password@localhost:5432/nano-fw' });
 const UserRepository = new Repository<UserRow>({ database, tableName: 'users' });
 
 const user = await UserRepository.get(1);
@@ -67,11 +66,11 @@ await database.destroy();
 
 ## Public imports
 
-| Path           | Values                                                                   | Types                                                         |
-| -------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `nano-fw`      | route, errorHandler, ApplicationError                                    | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload   |
-| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema | RouteDocsOptions, ScalarOptions, ErrorCatalog                 |
-| `nano-fw/data` | getConfig, getDatabase, Repository                                       | ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
+| Path           | Values                                                                       | Types                                                                                |
+| -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `nano-fw`      | route, errorHandler, ApplicationError                                        | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload                          |
+| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema     | RouteDocsOptions, ScalarOptions, ErrorCatalog                                        |
+| `nano-fw/data` | createDatabase, Repository, getConfig (deprecated), getDatabase (deprecated) | CreateDatabaseOptions, ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
 
 Pass `errorSchema` alongside `errors` to document a custom error payload.
 
@@ -229,14 +228,13 @@ pnpm add knex
 Configure a database and repository:
 
 ```ts
-import { getConfig, getDatabase, Repository } from 'nano-fw/data';
+import { createDatabase, Repository } from 'nano-fw/data';
 
 type UserRow = { id: number; name: string; email: string };
 type UserRowInsert = Pick<UserRow, 'name' | 'email'>;
 type UserRowUpdate = Partial<UserRowInsert>;
 
-const config = getConfig('postgres://user:password@localhost:5432/app');
-const database = getDatabase(config);
+const database = createDatabase({ connectionString: 'postgres://user:password@localhost:5432/app' });
 const UserRepository = new Repository<UserRow, UserRow, UserRowInsert, UserRowUpdate>({ database, tableName: 'users' });
 
 const createdUser = await UserRepository.create({ name: 'John', email: 'john@example.com' });

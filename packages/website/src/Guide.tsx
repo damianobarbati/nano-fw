@@ -143,10 +143,10 @@ curl -i 'http://localhost:8080/hello?name=1Ada'`}
       <figcaption className="font-mono text-sm font-semibold">database.ts</figcaption>
       <Code
         language="typescript"
-        text={`import { getConfig, getDatabase, Repository } from 'nano-fw/data';
+        text={`import { createDatabase, Repository } from 'nano-fw/data';
 
 type UserRow = { id: number; email: string };
-const database = getDatabase(getConfig('postgres://user:password@localhost:5432/nano-fw'));
+const database = createDatabase({ connectionString: 'postgres://user:password@localhost:5432/nano-fw' });
 const UserRepository = new Repository<UserRow>({ database, tableName: 'users' });
 
 const created = await UserRepository.create({ email: 'ada@example.com' });

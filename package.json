@@ -19,10 +19,10 @@
     "release": "pnpm --filter nano-fw publish --no-git-checks"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.7",
-    "@types/node": "^26.6.6",
+    "@biomejs/biome": "^2.6.9",
+    "@types/node": "^26.6.7",
     "@types/pg": "^8.23.1",
-    "oxlint": "^1.93.0",
+    "oxlint": "^1.95.0",
     "oxlint-better": "1.0.6",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"

@@ -9,7 +9,11 @@
   "engines": {
     "node": ">=26.0"
   },
+  "bin": {
+    "nano-fw": "./bin/nano-fw.js"
+  },
   "files": [
+    "bin",
     "dist"
   ],
   "exports": {
@@ -24,10 +28,10 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.11",
-    "@scalar/hono-api-reference": "^0.12.23",
+    "@scalar/hono-api-reference": "^0.12.24",
     "debug": "^4.4.3",
     "find-up": "^8.0.0",
-    "hono": "^4.13.20",
+    "hono": "^4.13.21",
     "knex": "3.3.0",
     "openapi3-ts": "^4.6.2",
     "pg": "^8.23.1",
@@ -35,7 +39,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/docs/docs.html dist/docs/ && cp src/database/migration.stub.ts dist/database/",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/docs/docs.html dist/docs/",
     "dev": "tsc -p tsconfig.build.json --watch",
     "prepack": "pnpm run build && cp ../../README.md README.md"
   },

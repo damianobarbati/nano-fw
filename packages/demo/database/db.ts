@@ -1,8 +1,3 @@
-import { getConfig, getDatabase } from 'nano-fw/data';
+import { createDatabase } from 'nano-fw/data';
 
-// credentials as defined in README.md test section when spinning the pg docker container
-const config = getConfig('postgres://user:password@localhost:5432/nano-fw');
-const database = getDatabase(config);
-
-export default config;
-export { database };
+export const database = createDatabase({ connectionString: 'postgres://user:password@localhost:5432/nano-fw' });

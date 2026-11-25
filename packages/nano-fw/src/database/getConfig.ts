@@ -1,14 +1,11 @@
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import debug from 'debug';
 import type { Knex } from 'knex';
 import getPackage from '../getPackage.ts';
 
 const { pkg_name } = getPackage();
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-
 const isDebugEnabled = debug.enabled(`${pkg_name}:db`);
 
+/** @deprecated Use createDatabase for connection string based setup. */
 const getConfig = (connectionString: string, maxConnections = 20): Knex.Config => {
   const isLocal = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 
@@ -30,13 +27,6 @@ const getConfig = (connectionString: string, maxConnections = 20): Knex.Config =
         if (!sql?.includes('no-log')) console.log(`[QUERY] ${sql}`, bindings);
       },
     },
-    migrations: {
-      stub: path.resolve(__dirname, './migration.stub.ts'),
-      tableName: 'knex_migrations',
-      directory: './migrations',
-      loadExtensions: ['.ts'],
-    },
-    seeds: { directory: './seeds', loadExtensions: ['.ts'] },
   };
 
   return config;

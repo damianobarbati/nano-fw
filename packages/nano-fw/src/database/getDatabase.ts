@@ -1,5 +1,6 @@
 import knex, { type Knex } from 'knex';
 import pg from 'pg';
+import getConfig from './getConfig.ts';
 
 pg.types.setTypeParser(pg.types.builtins.TEXT, String);
 pg.types.setTypeParser(pg.types.builtins.NUMERIC, Number);
@@ -26,6 +27,7 @@ const SLOW_QUERY_THRESHOLD = 2_000; // 2s
 const SLOW_QUERY_IGNORE_PATTERNS = [/no-log/, /^select count/];
 const queries_times = new Map<string, number>();
 
+/** @deprecated Use createDatabase for connection string based setup. */
 const getDatabase = (config: Knex.Config) => {
   const database = knex(config);
 
@@ -66,6 +68,14 @@ const interpolateQuery = (sql: string, bindings: any[] = []): string => {
   } catch {
     return sql;
   }
+};
+
+export type CreateDatabaseOptions = { connectionString: string; maxConnections?: number };
+
+export const createDatabase = ({ connectionString, maxConnections }: CreateDatabaseOptions) => {
+  const config = getConfig(connectionString, maxConnections);
+  const database = getDatabase(config);
+  return database;
 };
 
 export default getDatabase;

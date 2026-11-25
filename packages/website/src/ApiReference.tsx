@@ -286,23 +286,13 @@ export const errors = {
 
 const data: ReferenceEntry[] = [
   {
-    name: 'getConfig',
+    name: 'createDatabase',
     kind: 'Function',
     description:
-      'Build a PostgreSQL Knex configuration from the connection string and maximum pool size. The pool allows 20 connections by default.',
-    example: `import { getConfig } from 'nano-fw/data';
+      'Create a PostgreSQL client with value parsers and slow query logging. Pass a connectionString and optional maxConnections (default 20). Call destroy() at shutdown. This factory replaces the deprecated getConfig and getDatabase functions.',
+    example: `import { createDatabase } from 'nano-fw/data';
 
-export const config = getConfig('postgres://user:password@localhost:5432/nano-fw', 8);`,
-  },
-  {
-    name: 'getDatabase',
-    kind: 'Function',
-    description:
-      'Create a Knex client with PostgreSQL value parsers and slow query logging. Destroy the client when the process finishes using it.',
-    example: `import { getConfig, getDatabase } from 'nano-fw/data';
-
-const config = getConfig('postgres://user:password@localhost:5432/nano-fw', 8);
-const database = getDatabase(config);
+const database = createDatabase({ connectionString: 'postgres://user:password@localhost:5432/nano-fw', maxConnections: 8 });
 const result = await database.raw('select current_database() as name');
 console.log(result.rows);
 await database.destroy();`,
@@ -313,13 +303,13 @@ await database.destroy();`,
     kind: 'Class',
     description:
       'Read rows from a table or view and write to the table. Supply the resource, row, insert and update types to check queries at compile time. The default insert type makes fields optional and excludes id, created_at and updated_at. This example reads from items_view and uses id as the default sort column.',
-    example: `import { getConfig, getDatabase, Repository } from 'nano-fw/data';
+    example: `import { createDatabase, Repository } from 'nano-fw/data';
 
 type ItemRow = { id: number; name: string };
 type ItemInsert = Pick<ItemRow, 'name'>;
 type ItemUpdate = Partial<ItemInsert>;
 
-const database = getDatabase(getConfig('postgres://user:password@localhost:5432/nano-fw', 8));
+const database = createDatabase({ connectionString: 'postgres://user:password@localhost:5432/nano-fw', maxConnections: 8 });
 const ItemRepository = new Repository<ItemRow, ItemRow, ItemInsert, ItemUpdate>({
   database,
   tableName: 'items',

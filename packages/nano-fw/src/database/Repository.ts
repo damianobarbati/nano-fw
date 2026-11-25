@@ -8,6 +8,9 @@ export const trxContext = new AsyncLocalStorage<Knex.Transaction>();
 
 export type RawCondition = string | { sql: string; bindings: readonly Knex.RawBinding[] };
 
+type QueryAction = 'select' | 'update' | 'delete';
+type QueryFilters = { query: Knex.QueryBuilder; where: Record<string, unknown>; action: QueryAction };
+
 type ColumnName<Row> = Extract<keyof Row, string>;
 
 type EqualityWhere<Row> = {
@@ -113,8 +116,7 @@ export default class Repository<
   private async findOne(input: RepositoryWhere<ResourceRow>, plain: boolean): Promise<Resource | ResourceRow | null> {
     const query = this.db(this.tableOrView);
 
-    Repository.applyWhereWithOperators(query, input);
-    await this.police(query, 'select');
+    await this.#applyFilters({ query, where: input, action: 'select' });
 
     const row = (await query.first()) as ResourceRow | undefined;
     if (!row) return null;
@@ -126,8 +128,7 @@ export default class Repository<
   async exists(input: RepositoryWhere<ResourceRow>): Promise<boolean> {
     const query = this.db(this.tableOrView).select('id');
 
-    Repository.applyWhereWithOperators(query, input);
-    await this.police(query, 'select');
+    await this.#applyFilters({ query, where: input, action: 'select' });
 
     const row = (await query.first()) as ResourceRow | undefined;
     return Boolean(row);
@@ -202,8 +203,7 @@ export default class Repository<
   ): Promise<Resource[] | ResourceRow[]> {
     const query = this.db(this.configuration.tableName);
 
-    Repository.applyWhereWithOperators(query, where);
-    await this.police(query, 'update');
+    await this.#applyFilters({ query, where, action: 'update' });
 
     const rows = await query.update(input).returning('*');
     const result = await this.applyHydration(rows, plain);
@@ -217,8 +217,7 @@ export default class Repository<
   async removeBy(where: RepositoryWhere<ResourceRow>): Promise<boolean> {
     const query = this.db(this.configuration.tableName);
 
-    Repository.applyWhereWithOperators(query, where);
-    await this.police(query, 'delete');
+    await this.#applyFilters({ query, where, action: 'delete' });
 
     const count = await query.delete();
     return count > 0;
@@ -229,8 +228,7 @@ export default class Repository<
 
     const query = this.db(this.configuration.tableName).select('id');
 
-    Repository.applyWhereWithOperators(query, where);
-    await this.police(query, 'select');
+    await this.#applyFilters({ query, where, action: 'select' });
 
     const rows = await query.forUpdate();
     return rows.length > 0;
@@ -290,6 +288,11 @@ export default class Repository<
     }
   }
 
+  async #applyFilters({ query, where, action }: QueryFilters): Promise<void> {
+    Repository.applyWhereWithOperators(query, where);
+    await this.police(query, action);
+  }
+
   static applyWhereWithOperators(query: Knex.QueryBuilder, wheres: Record<string, unknown>, tableName?: string): void {
     const operators: Record<string, (col: string, val: any) => void> = {
       eq: (c, v) => (v === null ? query.whereNull(c) : query.where(c, v)),
@@ -346,8 +349,7 @@ export default class Repository<
     const query = this.db(this.tableOrView).select('*') as Knex.QueryBuilder<ResourceRow, ResourceRow[]>;
     const { sort: _sort, limit: _limit, offset: _offset, ...wheres } = params;
 
-    Repository.applyWhereWithOperators(query, wheres);
-    await this.police(query, 'select');
+    await this.#applyFilters({ query, where: wheres, action: 'select' });
     return { type: 'query', query };
   }
 
@@ -405,5 +407,5 @@ export default class Repository<
     return rows as unknown as Resource[];
   }
 
-  async police(_query: Knex.QueryBuilder, _action: 'select' | 'update' | 'delete'): Promise<void> {}
+  async police(_query: Knex.QueryBuilder, _action: QueryAction): Promise<void> {}
 }

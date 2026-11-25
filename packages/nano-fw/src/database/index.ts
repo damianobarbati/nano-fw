@@ -1,5 +1,5 @@
 export { default as getConfig } from './getConfig.ts';
-export { default as getDatabase } from './getDatabase.ts';
+export { type CreateDatabaseOptions, createDatabase, default as getDatabase } from './getDatabase.ts';
 
 export {
   default as Repository,
