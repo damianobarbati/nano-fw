@@ -1,17 +1,13 @@
 import fs from 'node:fs';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { serveStatic } from '@hono/node-server/serve-static';
 import type { ApiReferenceConfiguration } from '@scalar/hono-api-reference';
 import type { Hono } from 'hono';
 import type { OpenAPIObject } from 'openapi3-ts/oas30';
 import type { $ZodType } from 'zod/v4/core';
-import getPackage from '../getPackage.ts';
+import getPackage, { type PackageMetadata } from '../getPackage.ts';
+import { docsTemplate } from './docsTemplate.ts';
 import { generateOpenapiDoc, OpenAPIRegistry, openapiRegistry } from './openapi.ts';
 import { type ErrorCatalog, registerErrors } from './registerErrors.ts';
-
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const { pkg_name } = getPackage();
 
 type JsonConfiguration<Value> = Value extends (...args: never[]) => unknown
   ? never
@@ -25,6 +21,7 @@ export type ScalarOptions = JsonConfiguration<Partial<ApiReferenceConfiguration>
 
 export interface RouteDocsOptions {
   docsAssets?: string;
+  packageMetadata?: PackageMetadata;
   errors?: ErrorCatalog;
   errorSchema?: $ZodType;
   /** Browser tab title and Scalar introduction heading. Defaults to API Reference. */
@@ -62,6 +59,7 @@ const serializeForInlineScript = (value: unknown) => {
 
 export const routeDocs = (app: Hono, routePath: string, options: RouteDocsOptions = {}) => {
   const docsAssets = options.docsAssets;
+  const metadata = options.packageMetadata ?? getPackage();
   const cleanRoutePath = routePath.replace(/\/$/, '');
   const specPath = `${cleanRoutePath}/openapi.json`;
   const scalarOptionsJson = serializeForInlineScript(options.scalarOptions ?? {});
@@ -72,7 +70,7 @@ export const routeDocs = (app: Hono, routePath: string, options: RouteDocsOption
 
   if (options.errors) registerErrors(options.errors, options.errorSchema, registry);
 
-  const openapiSpec = generateOpenapiDoc(registry, docsAssets, options.title ?? 'API Reference');
+  const openapiSpec = generateOpenapiDoc(registry, docsAssets, options.title ?? 'API Reference', metadata);
   const openapiJson = JSON.stringify(openapiSpec);
 
   // serve openapi spec in-memory
@@ -84,9 +82,8 @@ export const routeDocs = (app: Hono, routePath: string, options: RouteDocsOption
     return c.body(JSON.stringify(document), 200, { 'Content-Type': 'application/json; charset=utf-8' });
   });
 
-  let html = fs.readFileSync(path.join(__dirname, 'docs.html'), 'utf-8');
+  let html = docsTemplate.replaceAll('XYZ', () => metadata.name);
 
-  html = html.replaceAll('XYZ', () => pkg_name);
   html = html.replaceAll('/docs/openapi.json', () => specPath);
   html = html.replace('__TAG_ORDER__', () => serializeForInlineScript(options.tagOrder ?? []));
 

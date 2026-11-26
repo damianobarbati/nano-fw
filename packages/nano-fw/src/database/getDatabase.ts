@@ -70,10 +70,10 @@ const interpolateQuery = (sql: string, bindings: any[] = []): string => {
   }
 };
 
-export type CreateDatabaseOptions = { connectionString: string; maxConnections?: number };
+export type CreateDatabaseOptions = { connectionString: string; maxConnections?: number; packageName?: string };
 
-export const createDatabase = ({ connectionString, maxConnections }: CreateDatabaseOptions) => {
-  const config = getConfig(connectionString, maxConnections);
+export const createDatabase = ({ connectionString, maxConnections, packageName }: CreateDatabaseOptions) => {
+  const config = getConfig(connectionString, maxConnections, packageName);
   const database = getDatabase(config);
   return database;
 };

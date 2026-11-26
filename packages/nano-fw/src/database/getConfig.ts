@@ -2,11 +2,8 @@ import debug from 'debug';
 import type { Knex } from 'knex';
 import getPackage from '../getPackage.ts';
 
-const { pkg_name } = getPackage();
-const isDebugEnabled = debug.enabled(`${pkg_name}:db`);
-
 /** @deprecated Use createDatabase for connection string based setup. */
-const getConfig = (connectionString: string, maxConnections = 20): Knex.Config => {
+const getConfig = (connectionString: string, maxConnections = 20, packageName = getPackage().name): Knex.Config => {
   const isLocal = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 
   const config: Knex.Config = {
@@ -21,7 +18,7 @@ const getConfig = (connectionString: string, maxConnections = 20): Knex.Config =
       propagateCreateError: false,
     },
     acquireConnectionTimeout: 3_000,
-    debug: isDebugEnabled,
+    debug: debug.enabled(`${packageName}:db`),
     log: {
       debug: ({ sql, bindings }) => {
         if (!sql?.includes('no-log')) console.log(`[QUERY] ${sql}`, bindings);

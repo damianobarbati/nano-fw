@@ -1,3 +1,4 @@
+export { runMigrations } from './applyMigrations.ts';
 export { default as getConfig } from './getConfig.ts';
 export { type CreateDatabaseOptions, createDatabase, default as getDatabase } from './getDatabase.ts';
 

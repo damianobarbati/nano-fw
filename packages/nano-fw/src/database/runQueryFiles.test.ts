@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import knex, { type Knex } from 'knex';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { database as admin } from '../../vitest.setup.ts';
+import { runMigrations } from './index.ts';
 import { runQueryFiles } from './runQueryFiles.ts';
 
 let schema: string;
@@ -117,5 +118,33 @@ describe('runQueryFiles', () => {
       await expect(seed()).rejects.toThrow(failing);
       expect(await database('events').orderBy('id').pluck('name')).toEqual(['a', 'b', 'a']);
     });
+  });
+});
+
+describe('runMigrations', () => {
+  it('resumes file migrations and applies imported functions in filename order', async () => {
+    await writeFile(join(directory, 'migrations/1.ts'), 'export const up = async () => {}');
+    await migrate();
+
+    const migrations = {
+      '3.ts': async (trx: Knex.Transaction) => {
+        await trx.raw('insert into items values (1)');
+      },
+      '2.ts': async (trx: Knex.Transaction) => {
+        await trx.raw('create table items (value integer)');
+      },
+      '1.ts': async () => {
+        throw new Error('Migration ran twice');
+      },
+    };
+
+    await runMigrations({ database, migrations });
+    await runMigrations({ database, migrations });
+
+    expect(await database('knex_migrations').orderBy('id').select('name', 'batch')).toEqual([
+      { name: '1.ts', batch: 1 },
+      { name: '2.ts', batch: 2 },
+      { name: '3.ts', batch: 2 },
+    ]);
   });
 });

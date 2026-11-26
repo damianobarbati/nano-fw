@@ -7,7 +7,6 @@ import getPackage from '../getPackage.ts';
 import type { HTTPMethod } from '../http/registerRoute.ts';
 import { createSchemaConverter } from './schemaConverter.ts';
 
-const { pkg_name, pkg_version } = getPackage();
 type Response = { description: string; schema: $ZodType };
 
 export type RouteMeta = Partial<{
@@ -73,7 +72,8 @@ const jsonContent = (schema: SchemaObject) => ({ 'application/json': { schema } 
 export const generateOpenapiDoc = (
   registry: OpenAPIRegistry,
   folderPath: string | undefined,
-  title = `${pkg_name} API reference`,
+  title?: string,
+  metadata = getPackage(),
 ): OpenAPIObject => {
   const files =
     folderPath && fs.statSync(folderPath, { throwIfNoEntry: false })?.isDirectory() ? fs.readdirSync(folderPath) : [];
@@ -88,7 +88,7 @@ export const generateOpenapiDoc = (
 
   const document: OpenAPIObject = {
     openapi: '3.0.0',
-    info: { title, description, version: pkg_version },
+    info: { title: title ?? `${metadata.name} API reference`, description, version: metadata.version },
     components: { schemas },
     paths: Object.create(null),
   };

@@ -1,7 +1,7 @@
 import type { Knex } from 'knex';
 
 type Migration = (transaction: Knex.Transaction) => Promise<void>;
-type Options = { database: Knex; files: string[]; load: (file: string) => Promise<Migration> };
+type Options = { database: Knex; files: string[]; load: (file: string) => Migration | Promise<Migration> };
 
 const migrationLock = "select pg_advisory_xact_lock(hashtext(current_schema()), hashtext('knex_migrations'))";
 
@@ -48,3 +48,11 @@ export async function applyMigrations({ database, files, load }: Options) {
     }
   });
 }
+
+type RunMigrationsOptions = { database: Knex; migrations: Record<string, Migration> };
+
+export const runMigrations = async ({ database, migrations }: RunMigrationsOptions) => {
+  const files = Object.keys(migrations).sort();
+
+  await applyMigrations({ database, files, load: (file) => migrations[file] });
+};

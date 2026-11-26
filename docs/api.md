@@ -66,11 +66,11 @@ await database.destroy();
 
 ## Public imports
 
-| Path           | Values                                                                       | Types                                                                                |
-| -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `nano-fw`      | route, errorHandler, ApplicationError                                        | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload                          |
-| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema     | RouteDocsOptions, ScalarOptions, ErrorCatalog                                        |
-| `nano-fw/data` | createDatabase, Repository, getConfig (deprecated), getDatabase (deprecated) | CreateDatabaseOptions, ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
+| Path           | Values                                                                                      | Types                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `nano-fw`      | route, errorHandler, ApplicationError                                                       | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload                          |
+| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema                    | RouteDocsOptions, ScalarOptions, ErrorCatalog                                        |
+| `nano-fw/data` | createDatabase, runMigrations, Repository, getConfig (deprecated), getDatabase (deprecated) | CreateDatabaseOptions, ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
 
 Pass `errorSchema` alongside `errors` to document a custom error payload.
 
@@ -378,3 +378,9 @@ Extend `Repository<Row, Resource, Insert, Update>` when you need custom datasour
 | `Repository.applyWhereWithOperators(query, where, tableName?)` | Apply repository filters to a Knex query.                                 |
 
 `get`, `getBy`, `findBy`, `getem`, `create`, and `updateBy` accept `true` as their final argument to skip hydration. `createRaw`, `upsert`, and `insertIgnore` also bypass hydration.
+
+## Compiled applications
+
+Pass the application's package name to `createDatabase({ connectionString, packageName })` and its name and version to `routeDocs(app, '/docs', { packageMetadata: { name, version } })`. Both functions discover package metadata from the working directory when these options are omitted.
+
+Import `runMigrations` from `nano-fw/data` and call `await runMigrations({ database, migrations })`. Supply an object keyed by complete migration filenames, with each value set to its imported migration function. The runner sorts names, runs pending migrations in a transaction, and records them in the same history table used by the CLI.

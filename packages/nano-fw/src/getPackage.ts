@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import { findUpSync } from 'find-up';
 
-const getPackage = (): { pkg_name: string; pkg_version: string } => {
+export type PackageMetadata = { name: string; version: string };
+
+const getPackage = (): PackageMetadata => {
   const pkgFilePath = findUpSync('package.json');
   if (!pkgFilePath) throw new Error('[framework] Root directory was not found.');
 
@@ -18,7 +20,7 @@ const getPackage = (): { pkg_name: string; pkg_version: string } => {
     throw new Error('[framework] Package name and version must be strings.');
   }
 
-  const result = { pkg_name: pkg.name, pkg_version: pkg.version };
+  const result = { name: pkg.name, version: pkg.version };
   return result;
 };
 

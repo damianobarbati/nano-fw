@@ -15,8 +15,8 @@
     "lint": "oxlint && biome check && tsc --noEmit",
     "test": "pnpm -r run test",
     "dev": "pnpm -r --parallel dev",
-    "build": "pnpm --filter nano-fw run build && pnpm --filter website run build",
-    "release": "pnpm --filter nano-fw publish --no-git-checks",
+    "build": "pnpm -F nano-fw run build && pnpm -F website run build",
+    "release": "pnpm -F nano-fw publish --no-git-checks",
     "bump": "pnpm -r --include-workspace-root version"
   },
   "devDependencies": {
