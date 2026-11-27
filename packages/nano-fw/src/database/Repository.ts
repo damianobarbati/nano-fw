@@ -1,10 +1,10 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
 import type { Knex } from 'knex';
 import { ApplicationError } from '../ApplicationError.ts';
+import { runInTransaction, trxContext } from './runInTransaction.ts';
+
+export { trxContext } from './runInTransaction.ts';
 
 type RepositoryConfiguration = { database: Knex; tableName: string; viewName?: string; uniqueSortColumn?: string };
-
-export const trxContext = new AsyncLocalStorage<Knex.Transaction>();
 
 export type RawCondition = string | { sql: string; bindings: readonly Knex.RawBinding[] };
 
@@ -82,10 +82,8 @@ export default class Repository<
   }
 
   async runInTransaction<T>(fn: (trx: Knex.Transaction) => Promise<T>): Promise<T> {
-    const db = this.db;
-    return db.transaction(async (trx) => {
-      return trxContext.run(trx, () => fn(trx));
-    });
+    const result = await runInTransaction({ database: this.db, fn });
+    return result;
   }
 
   get tableOrView(): string {

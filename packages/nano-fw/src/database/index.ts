@@ -10,3 +10,5 @@ export {
   type RepositoryWhere,
   type UpsertOptions,
 } from './Repository.ts';
+
+export { runInTransaction } from './runInTransaction.ts';

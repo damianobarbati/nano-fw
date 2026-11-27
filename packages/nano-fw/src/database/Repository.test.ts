@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
 import { database } from '../../vitest.setup.ts';
+import { runInTransaction } from './index.ts';
 import Repository, { type RepositoryWhere, trxContext } from './Repository.ts';
 
 type UserRow = { id: number; name: string };
@@ -641,6 +642,82 @@ describe('Repository', () => {
 
       const custom = new RawRepository({ database, tableName: '_users' });
       expect(await custom.count()).toEqual(1);
+    });
+  });
+
+  describe('runInTransaction helper', () => {
+    it('commits writes across repositories and returns the callback result', async () => {
+      await trxContext.exit(async () => {
+        const name = 'Transaction helper commit';
+        const hostname = 'helper-commit.test';
+
+        try {
+          const userId = await runInTransaction({
+            database,
+            fn: async (trx) => {
+              expect(userRepository.db).toEqual(trx);
+
+              const user = await userRepository.create({ name });
+
+              await repository.create({ hostname, user_id: user.id });
+              return user.id;
+            },
+          });
+
+          expect(await userRepository.get(userId)).toMatchObject({ name });
+          expect(await repository.getBy({ hostname })).toMatchObject({ user_id: userId });
+        } finally {
+          await repository.removeBy({ hostname });
+          await userRepository.removeBy({ name });
+        }
+      });
+    });
+
+    it('rolls back writes across repositories when the callback fails', async () => {
+      await trxContext.exit(async () => {
+        const name = 'Transaction helper rollback';
+        const hostname = 'helper-rollback.test';
+
+        try {
+          await expect(
+            runInTransaction({
+              database,
+              fn: async () => {
+                const user = await userRepository.create({ name });
+
+                await repository.create({ hostname, user_id: user.id });
+                throw new Error('rollback');
+              },
+            }),
+          ).rejects.toThrow('rollback');
+
+          expect(await userRepository.findBy({ name })).toEqual(null);
+          expect(await repository.findBy({ hostname })).toEqual(null);
+        } finally {
+          await repository.removeBy({ hostname });
+          await userRepository.removeBy({ name });
+        }
+      });
+    });
+
+    it('rolls back nested writes and preserves outer writes', async () => {
+      await userRepository.runInTransaction(async () => {
+        const user = await userRepository.create({ name: 'Outer user' });
+        const hostname = 'helper-savepoint.test';
+
+        await expect(
+          runInTransaction({
+            database,
+            fn: async () => {
+              await repository.create({ hostname, user_id: user.id });
+              throw new Error('rollback savepoint');
+            },
+          }),
+        ).rejects.toThrow('rollback savepoint');
+
+        expect(await userRepository.get(user.id)).toMatchObject({ name: 'Outer user' });
+        expect(await repository.findBy({ hostname })).toEqual(null);
+      });
     });
   });
 

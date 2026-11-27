@@ -66,11 +66,11 @@ await database.destroy();
 
 ## Public imports
 
-| Path           | Values                                                                                      | Types                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `nano-fw`      | route, errorHandler, ApplicationError                                                       | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload                          |
-| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema                    | RouteDocsOptions, ScalarOptions, ErrorCatalog                                        |
-| `nano-fw/data` | createDatabase, runMigrations, Repository, getConfig (deprecated), getDatabase (deprecated) | CreateDatabaseOptions, ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
+| Path           | Values                                                                                                        | Types                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `nano-fw`      | route, errorHandler, ApplicationError                                                                         | HTTPMethod, RouteOptions, RouteMeta, ValidationErrorPayload                          |
+| `nano-fw`      | routeDocs, registerSchema, ApplicationErrorSchema, ValidationErrorSchema                                      | RouteDocsOptions, ScalarOptions, ErrorCatalog                                        |
+| `nano-fw/data` | createDatabase, runMigrations, runInTransaction, Repository, getConfig (deprecated), getDatabase (deprecated) | CreateDatabaseOptions, ID, RawCondition, RepositoryWhere, GetemParams, UpsertOptions |
 
 Pass `errorSchema` alongside `errors` to document a custom error payload.
 
@@ -357,14 +357,22 @@ const rawUser = await UserRepository.get(createdUser.id, true);
 
 ### Transactions and custom repositories
 
+Import `runInTransaction({ database, fn })` from `nano-fw/data`. Use the same Knex database instance for both repositories and for nested calls.
+
 ```ts
-await UserRepository.runInTransaction(async () => {
-  const user = await UserRepository.create({ name: 'Alice', email: 'alice@example.com' });
-  await UserRepository.update(user.id, { name: 'Alice Smith' });
+import { runInTransaction } from 'nano-fw/data';
+
+const userId = await runInTransaction({
+  database,
+  fn: async () => {
+    const user = await UserRepository.create({ name: 'Alice', email: 'alice@example.com' });
+    await ProfileRepository.create({ user_id: user.id });
+    return user.id;
+  },
 });
 ```
 
-Repository calls in the callback share the transaction automatically through async context, including calls to other repositories. Use `lockBy` inside this callback when row locks are required.
+The helper passes the Knex transaction to `fn`. Repository calls in `fn` join the transaction automatically. The helper commits and returns the callback result on success. If the callback throws or rejects, the helper rolls back and propagates the error. A nested call uses a savepoint. Use `lockBy` inside the callback when row locks are required.
 
 Extend `Repository<Row, Resource, Insert, Update>` when you need custom datasource operations or resource transformations:
 
